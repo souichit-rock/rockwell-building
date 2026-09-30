@@ -1,0 +1,77 @@
+/* Rockwell house palette, lifted 1:1 from rockwell-grove.vercel.app. */
+:root {
+  color-scheme: light;
+
+  /* surfaces */
+  --c-bg: 240 244 250;            /* paper — page background */
+  --c-surface: 255 255 255;       /* cards, tables, inputs */
+  --c-surface2: 237 242 249;      /* wells, row hover, inactive chips */
+
+  /* ink */
+  --c-text: 19 42 78;             /* navy ink */
+  --c-text-soft: 71 90 122;
+  --c-muted: 105 122 153;
+
+  /* lines */
+  --c-border: 221 229 240;
+  --c-border-strong: 197 208 224;
+
+  /* gold accent */
+  --c-accent: 245 197 24;
+  --c-accent-hover: 224 178 16;
+  --c-accent-soft: 254 245 205;
+  --c-accent-line: 245 228 150;
+  --c-on-accent: 17 38 71;
+
+  /* navy rail */
+  --c-nav-bg: 19 42 78;
+  --c-nav-bg-deep: 12 30 58;
+  --c-nav-hover: 30 57 100;
+  --c-nav-border: 38 68 114;
+  --c-nav-text: 255 255 255;
+  --c-nav-muted: 175 193 222;
+
+  /* status */
+  --c-success: 22 130 82;   --c-success-soft: 223 244 232;  --c-success-deep: 20 92 60;
+  --c-warn: 202 138 4;      --c-warn-soft: 254 243 199;     --c-warn-deep: 146 100 8;
+  --c-danger: 220 38 38;    --c-danger-soft: 254 226 226;   --c-danger-deep: 153 27 27;
+  --c-info: 37 99 235;      --c-info-soft: 219 234 254;     --c-info-deep: 30 64 175;
+}
+
+/* ponytail: one dark block. The boot script in index.html resolves prefers-color-scheme into
+   data-theme before first paint, so no duplicated @media block is needed. Wrapped in `@media not print`
+   so every printed sheet is light without re-declaring the light triplets. */
+@media not print {
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --c-bg: 8 20 40;
+  --c-surface: 17 37 66;
+  --c-surface2: 22 47 84;
+
+  --c-text: 237 244 255;
+  --c-text-soft: 184 200 228;
+  --c-muted: 147 166 200;
+
+  --c-border: 28 54 94;
+  --c-border-strong: 42 71 117;
+
+  --c-accent: 255 210 63;
+  --c-accent-hover: 255 221 107;
+  --c-accent-soft: 58 52 18;
+  --c-accent-line: 92 80 30;
+  --c-on-accent: 17 38 71;
+
+  --c-nav-bg: 11 28 56;
+  --c-nav-bg-deep: 8 21 43;
+  --c-nav-hover: 21 46 86;
+  --c-nav-border: 30 58 100;
+  --c-nav-text: 237 244 255;
+  --c-nav-muted: 158 179 214;
+
+  --c-success: 82 196 137;  --c-success-soft: 16 48 33;   --c-success-deep: 167 224 192;
+  --c-warn: 230 177 58;     --c-warn-soft: 51 42 18;      --c-warn-deep: 250 217 130;
+  --c-danger: 248 113 113;  --c-danger-soft: 62 20 20;    --c-danger-deep: 252 165 165;
+  --c-info: 96 165 250;     --c-info-soft: 17 34 64;      --c-info-deep: 147 197 253;
+}
+}
