@@ -1,13 +1,14 @@
-import { Hammer } from "lucide-react";
+import { lazy } from "react";
 import type { RouteObject } from "react-router";
-import { EmptyState } from "@/components/ui";
 
-const soon = (body: string) => <EmptyState icon={Hammer} title="Coming up" body={body} />;
+const AssetRegistry = lazy(() => import("./pages/AssetRegistry"));
+const AssetPassport = lazy(() => import("./pages/AssetPassport"));
+const QrRedirect = lazy(() => import("./pages/QrRedirect"));
 
 const routes = [
-  { path: "/assets", element: soon("Asset registry") },
-  { path: "/assets/:assetId", element: soon("Asset passport") },
-  { path: "/a/:tag", element: soon("QR short link") },
+  { path: "/assets", element: <AssetRegistry /> },
+  { path: "/assets/:assetId", element: <AssetPassport /> },
+  { path: "/a/:tag", element: <QrRedirect /> },
 ] satisfies RouteObject[];
 
 export default routes;

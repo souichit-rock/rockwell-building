@@ -1,15 +1,18 @@
-import { Hammer } from "lucide-react";
+import { lazy } from "react";
 import type { RouteObject } from "react-router";
-import { EmptyState } from "@/components/ui";
 
-const soon = (body: string) => <EmptyState icon={Hammer} title="Coming up" body={body} />;
+const SchedulePage = lazy(() => import("./pages/SchedulePage"));
+const PlanPage = lazy(() => import("./pages/PlanPage"));
+const InspectionsPage = lazy(() => import("./pages/InspectionsPage"));
+const NewInspectionPage = lazy(() => import("./pages/NewInspectionPage"));
+const InspectionPage = lazy(() => import("./pages/InspectionPage"));
 
 const routes = [
-  { path: "/maintenance", element: soon("PM schedule") },
-  { path: "/maintenance/:planId", element: soon("PM plan") },
-  { path: "/inspections", element: soon("Inspection log") },
-  { path: "/inspections/new", element: soon("New inspection") },
-  { path: "/inspections/:inspectionId", element: soon("Inspection") },
+  { path: "/maintenance", element: <SchedulePage /> },
+  { path: "/maintenance/:planId", element: <PlanPage /> },
+  { path: "/inspections", element: <InspectionsPage /> },
+  { path: "/inspections/new", element: <NewInspectionPage /> },
+  { path: "/inspections/:inspectionId", element: <InspectionPage /> },
 ] satisfies RouteObject[];
 
 export default routes;

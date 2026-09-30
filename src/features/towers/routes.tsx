@@ -1,12 +1,12 @@
-import { Hammer } from "lucide-react";
+import { lazy } from "react";
 import type { RouteObject } from "react-router";
-import { EmptyState } from "@/components/ui";
 
-const soon = (body: string) => <EmptyState icon={Hammer} title="Coming up" body={body} />;
+const TowersPage = lazy(() => import("./pages/TowersPage"));
+const TowerPage = lazy(() => import("./pages/TowerPage"));
 
 const routes = [
-  { path: "/towers", element: soon("Towers") },
-  { path: "/towers/:towerId", element: soon("Tower overview") },
+  { path: "/towers", element: <TowersPage /> },
+  { path: "/towers/:towerId", element: <TowerPage /> },
 ] satisfies RouteObject[];
 
 export default routes;

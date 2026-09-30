@@ -1,11 +1,10 @@
-import { Hammer } from "lucide-react";
+import { lazy } from "react";
 import type { RouteObject } from "react-router";
-import { EmptyState } from "@/components/ui";
 
-const soon = (body: string) => <EmptyState icon={Hammer} title="Coming up" body={body} />;
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 
 const routes = [
-  { path: "/", element: soon("Portfolio dashboard") },
+  { path: "/", element: <Dashboard /> },
 ] satisfies RouteObject[];
 
 export default routes;
