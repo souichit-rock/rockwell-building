@@ -16,7 +16,7 @@ export function PageHeader({ eyebrow, title, lede, actions, children }: {
           <h1 className="type-display text-ink">{title}</h1>
           {lede && <p className="type-body mt-2 max-w-[58ch] text-ink-soft">{lede}</p>}
         </div>
-        {actions && <div className="flex shrink-0 flex-wrap gap-2">{actions}</div>}
+        {actions && <div className="flex min-w-0 max-w-full flex-wrap gap-2">{actions}</div>}
       </div>
       {children && <div className="mt-5">{children}</div>}
     </header>

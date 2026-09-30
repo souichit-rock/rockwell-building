@@ -82,3 +82,14 @@
   body { background: rgb(var(--c-surface)); }
   main { max-width: none; padding: 0; }
 }
+
+/* Scroll containers must be the containing block of anything absolutely positioned inside them
+   (Tailwind's sr-only spans, focus-ring pseudo-elements); otherwise those boxes escape the
+   scroller and stretch the page horizontally. Confirmed at 390 px on every register page. */
+@layer base {
+  [class~="overflow-x-auto"],
+  [class~="overflow-auto"],
+  [class~="overflow-x-scroll"] {
+    position: relative;
+  }
+}
