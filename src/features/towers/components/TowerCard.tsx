@@ -17,7 +17,8 @@ function Stat({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-const inlineLink = "focus-ring relative z-10 rounded hover:underline";
+// the ::after grows the text-height link to a 40px hit area, so a near miss does not fall through to the stretched title link
+const inlineLink = "focus-ring relative z-10 rounded hover:underline after:absolute after:-inset-x-2 after:-inset-y-3 after:content-['']";
 
 /** One tower on /towers. The title link is stretched over the whole card; the two count links sit above it. */
 export function TowerCard({ tower, health, assets, openWos }: { tower: Tower; health: HealthScore; assets: number; openWos: number }) {

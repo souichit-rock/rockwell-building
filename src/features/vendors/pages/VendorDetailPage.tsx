@@ -2,6 +2,7 @@ import { Box, CalendarClock, ChevronRight, ClipboardList, FileText, Mail, Phone,
 import { Link, useNavigate, useParams } from "react-router";
 import NotFound from "@/app/NotFound";
 import { Badge, Breadcrumb, Button, Card, DataTable, EmptyState, KV, Monogram, PageHeader, StatTile, type Column } from "@/components/ui";
+import { permitStatus } from "@/data/selectors";
 import { useDb } from "@/data/store";
 import { daysUntil, fmtDate } from "@/lib/dates";
 import { fmtNumber } from "@/lib/format";
@@ -9,7 +10,7 @@ import { paths } from "@/lib/paths";
 import { assetStatusTone, dueTone, permitTone, priorityTone, warrantyTone, woStatusTone } from "@/lib/status";
 import { ContactActions, HeaderActions, Section, linkClass } from "../components/bits";
 import {
-  ACCREDITATION_DUE_DAYS, BAND_LABEL, CONTRACT_ENDING_DAYS, claimHref, expiryState, fmtHours, mailHref, relDays, sentence, signedDays,
+  BAND_LABEL, CONTRACT_ENDING_DAYS, claimHref, expiryState, fmtHours, mailHref, relDays, sentence, signedDays,
   telHref, vendorDetail, words, type PlanRow, type ServedRow, type WarrantyRow, type WoRow,
 } from "../lib";
 
@@ -101,7 +102,7 @@ export default function VendorDetailPage() {
   const contractDays = contract ? daysUntil(contract.end) : undefined;
   const contractState = contractDays === undefined ? "valid" : expiryState(contractDays, CONTRACT_ENDING_DAYS);
   const accreditationDays = vendor.accreditationExpiry ? daysUntil(vendor.accreditationExpiry) : undefined;
-  const accreditationState = accreditationDays === undefined ? "valid" : expiryState(accreditationDays, ACCREDITATION_DUE_DAYS);
+  const accreditationState = vendor.accreditationExpiry ? permitStatus(vendor.accreditationExpiry) : "valid";
   const slaBreached = !!contract && d.medianResponse !== null && d.medianResponse > contract.slaResponseHours;
   const ends = (days: number) => (days < 0 ? `Expired ${relDays(days)}` : `Ends ${relDays(days)}`);
 

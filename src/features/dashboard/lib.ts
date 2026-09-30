@@ -1,9 +1,9 @@
 // Dashboard-only derived values (spec 6.1). Every number here comes from a foundation selector; this file only groups, sorts and words them.
 import {
-  PERMIT_DUE_DAYS, PM_DUE_DAYS, asBuiltCoverage, attentionItems, brandImpact, openWorkOrders, permitStatus, portfolioKpis, recordGaps, towerHealth,
+  PERMIT_DUE_DAYS, PM_DUE_DAYS, asBuiltCoverage, attentionItems, brandImpact, dueStatus, openWorkOrders, permitStatus, portfolioKpis, recordGaps, towerHealth,
 } from "@/data/selectors";
-import type { AttentionItem, Db, DisciplineCode, HealthScore, Id, ISODate, PortfolioKpis, RecordGap, RecordGapKind, Tower } from "@/data/types";
-import { addDays, daysUntil, fmtDate } from "@/lib/dates";
+import type { AttentionItem, Db, DisciplineCode, DocRevision, HealthScore, Id, ISODate, PortfolioKpis, RecordGap, RecordGapKind, Tower } from "@/data/types";
+import { addDays, fmtDate } from "@/lib/dates";
 import { plural } from "@/lib/format";
 import { paths } from "@/lib/paths";
 
@@ -29,7 +29,9 @@ const GAP_ORDER: RecordGapKind[] = ["missing-asbuilt", "no-om", "stale-sheet"];
 const weekday = new Intl.DateTimeFormat("en-PH", { weekday: "short", timeZone: "UTC" });
 
 // The selectors word a subtitle as "<Tower> · rest"; under a tower heading the prefix is noise.
-const stripTower = (subtitle: string, name: string) => (subtitle.startsWith(`${name} · `) ? subtitle.slice(name.length + 3) : subtitle);
+// The warranty item puts it last ("<Type> · <Tower>"), so a trailing name goes too.
+const stripTower = (subtitle: string, name: string) =>
+  subtitle.startsWith(`${name} · `) ? subtitle.slice(name.length + 3) : subtitle.endsWith(` · ${name}`) ? subtitle.slice(0, -(name.length + 3)) : subtitle;
 
 function towerCards(db: Db, today: ISODate): TowerCard[] {
   const permits = Object.values(db.permits);
@@ -80,8 +82,7 @@ function gapSections(db: Db, towerId?: Id): GapSection[] {
 function pmStrip(db: Db, today: ISODate): StripDay[] {
   const counts = new Map<ISODate, number>();
   for (const p of Object.values(db.pmPlans)) {
-    const d = daysUntil(p.nextDue, today);
-    if (d >= 0 && d <= PM_DUE_DAYS) counts.set(p.nextDue, (counts.get(p.nextDue) ?? 0) + 1);
+    if (dueStatus(p.nextDue, today) === "due") counts.set(p.nextDue, (counts.get(p.nextDue) ?? 0) + 1);
   }
   return Array.from({ length: PM_DUE_DAYS + 1 }, (_, i) => {
     const date = addDays(today, i);
@@ -96,7 +97,8 @@ function tourSteps(db: Db, kpis: PortfolioKpis): TourStep[] {
   const prohibited = standard?.approvals.find((a) => a.brandId === "kestrel-pumps")?.tier === "prohibited";
   const where = impact.towerIds.map((id) => db.towers[id]?.name ?? id).join(", ");
   const doc = db.documents["doc-eds-e-ab"];
-  const rev = doc?.revisions[doc.revisions.length - 1]?.rev;
+  // newest by date, a later entry wins a tie: the rule the Documents pages use, so a back-dated revision cannot make the caption disagree with them
+  const rev = doc?.revisions.reduce<DocRevision | undefined>((a, r) => (!a || r.date >= a.date ? r : a), undefined)?.rev;
   const predecessor = Object.values(db.documents).find((d) => d.supersededById === "doc-eds-e-ab");
   const task = db.pmPlans["pm-eds-b3-fp-01-1"]?.task.toLowerCase() ?? "PM visit";
   return [

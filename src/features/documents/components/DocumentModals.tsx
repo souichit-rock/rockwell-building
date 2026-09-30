@@ -3,7 +3,7 @@ import { Button, Field, Modal, inputClass, selectClass, textareaClass } from "@/
 import { newId, upsert, useDb } from "@/data/store";
 import type { Document, Id } from "@/data/types";
 import { todayISO } from "@/lib/dates";
-import { DISCIPLINE_CODES, DOC_TYPES, DOC_TYPE_LABEL, cmp, focusFirstInvalid, latestRev, nextRev, relationFor } from "../lib";
+import { DISCIPLINE_CODES, DOC_TYPES, DOC_TYPE_LABEL, cmp, focusFirstInvalid, isISODate, latestRev, nextRev, relationFor } from "../lib";
 
 type Change = ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>;
 
@@ -23,11 +23,19 @@ function AddDocumentForm({ formId, defaultTowerId, onSaved }: { formId: string; 
   });
   const [errors, setErrors] = useState<Partial<Record<keyof DocValues, string>>>({});
 
+  const assetFor = (raw: string) => {
+    const tag = raw.trim().toLowerCase();
+    return tag ? Object.values(db.assets).find((a) => a.tag.toLowerCase() === tag) : undefined;
+  };
+  // a sheet only governs an asset of its own discipline (governingSheet, asBuiltCoverage), so the discipline follows the linked asset
+  const disciplineOf = (asset: { equipmentTypeId: Id } | undefined) => (asset ? db.equipmentTypes[asset.equipmentTypeId]?.disciplineId : undefined);
+
   const bind = (k: keyof DocValues) => ({
     value: v[k],
     onChange: (e: Change) => {
       const value = e.target.value;
-      setV((p) => ({ ...p, [k]: value, ...(k === "towerId" ? { floorId: "" } : {}) }));
+      const discipline = k === "assetTag" ? disciplineOf(assetFor(value)) : undefined;
+      setV((p) => ({ ...p, [k]: value, ...(k === "towerId" ? { floorId: "" } : {}), ...(discipline ? { disciplineId: discipline } : {}) }));
     },
   });
 
@@ -38,17 +46,21 @@ function AddDocumentForm({ formId, defaultTowerId, onSaved }: { formId: string; 
     e.preventDefault();
     const docNo = v.docNo.trim();
     const rev = v.rev.trim();
-    const tag = v.assetTag.trim().toLowerCase();
-    const asset = tag ? Object.values(db.assets).find((a) => a.tag.toLowerCase() === tag) : undefined;
+    const tag = v.assetTag.trim();
+    const asset = assetFor(tag);
+    const assetDiscipline = disciplineOf(asset);
     const next: Partial<Record<keyof DocValues, string>> = {};
     if (!docNo) next.docNo = "Enter the document number.";
     else if (Object.values(db.documents).some((d) => d.docNo.toLowerCase() === docNo.toLowerCase())) next.docNo = "That number is already on the register.";
     if (!v.title.trim()) next.title = "Enter a title.";
     if (!rev) next.rev = "Enter the revision.";
     if (!v.issuedBy.trim()) next.issuedBy = "Enter who issued it.";
-    if (!v.date) next.date = "Pick the revision date.";
+    if (!isISODate(v.date)) next.date = "Pick a valid revision date.";
     if (tag && !asset) next.assetTag = "No asset has that tag.";
     else if (asset && v.towerId && asset.towerId !== v.towerId) next.assetTag = `${asset.tag} is in a different tower.`;
+    else if (asset && assetDiscipline && assetDiscipline !== v.disciplineId) {
+      next.assetTag = `${asset.tag} is a ${db.disciplines[assetDiscipline]?.name ?? assetDiscipline} asset. Set Discipline to match.`;
+    }
     setErrors(next);
     if (Object.keys(next).length > 0) return focusFirstInvalid(formRef.current);
 
@@ -69,7 +81,7 @@ function AddDocumentForm({ formId, defaultTowerId, onSaved }: { formId: string; 
   return (
     <form ref={formRef} id={formId} onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
       <Field label="Document no" error={errors.docNo}>
-        <input className={inputClass} autoComplete="off" placeholder="EDS-E-AB-01" {...bind("docNo")} />
+        <input className={inputClass} autoComplete="off" maxLength={24} placeholder="EDS-E-AB-01" {...bind("docNo")} />
       </Field>
       <Field label="Revision" error={errors.rev}>
         <input className={inputClass} autoComplete="off" {...bind("rev")} />
@@ -114,7 +126,7 @@ function AddDocumentForm({ formId, defaultTowerId, onSaved }: { formId: string; 
         <input type="date" className={inputClass} {...bind("date")} />
       </Field>
       <div className="sm:col-span-2">
-        <Field label="Linked asset (tag)" hint="Optional. Links the document to one asset; more links can follow." error={errors.assetTag}>
+        <Field label="Linked asset (tag)" hint="Optional. Links the document to one asset and takes that asset's discipline; more links can follow." error={errors.assetTag}>
           <input className={inputClass} autoComplete="off" list={listId} placeholder="EDS-B3-FP-01" {...bind("assetTag")} />
         </Field>
         <datalist id={listId}>
@@ -175,7 +187,7 @@ function AddRevisionForm({ formId, doc, onSaved }: { formId: string; doc: Docume
     const next: Partial<Record<keyof RevValues, string>> = {};
     if (!rev) next.rev = "Enter the revision.";
     else if (doc.revisions.some((r) => r.rev.toLowerCase() === rev.toLowerCase())) next.rev = `${rev} is already in the history.`;
-    if (!v.date) next.date = "Pick the issue date.";
+    if (!isISODate(v.date)) next.date = "Pick a valid issue date.";
     if (!v.issuedBy.trim()) next.issuedBy = "Enter who issued it.";
     if (!v.reason.trim()) next.reason = "Say what changed.";
     setErrors(next);

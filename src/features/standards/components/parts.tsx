@@ -6,16 +6,16 @@ import { paths } from "@/lib/paths";
 import { complianceTone, tierTone } from "@/lib/status";
 import { sharePct, sentence, words, type Totals } from "../lib";
 
-/** The finish swatch tile. The only inline colour in the feature: it is data (Finish.swatch), not a design token. */
+/** The finish swatch tile. The only inline colour in the feature: it is data (Finish.swatch), not a design token. `className` replaces the default `size-6` (cn does not merge conflicting utilities). */
 export function Swatch({ finish, className }: { finish: Finish; className?: string }) {
-  return <span aria-hidden="true" className={cn("inline-block size-6 shrink-0 rounded border border-line-strong", className)} style={{ background: finish.swatch }} />;
+  return <span aria-hidden="true" className={cn("inline-block shrink-0 rounded border border-line-strong", className ?? "size-6")} style={{ background: finish.swatch }} />;
 }
 
 /** Approved-brand chip: a link to the brand page, coloured by tier through tierTone. The tier is also spoken, so colour is not the only cue. */
 export function BrandChip({ brandId, brand, tier }: { brandId: Id; brand: Brand | undefined; tier: ApprovalTier }) {
   const name = brand?.name ?? brandId;
   return (
-    <Link to={paths.brand(brandId)} title={`${name}: ${sentence(tier)}`} className="focus-ring rounded-full">
+    <Link to={paths.brand(brandId)} title={`${name}: ${sentence(tier)}`} className="focus-ring relative rounded-full after:absolute after:-inset-x-0.5 after:-inset-y-2 after:content-['']">
       <Badge tone={tierTone(tier)}>
         {name}
         <span className="sr-only"> ({words(tier)})</span>
@@ -25,7 +25,7 @@ export function BrandChip({ brandId, brand, tier }: { brandId: Id; brand: Brand 
 }
 
 export const TierBadge = ({ tier }: { tier: ApprovalTier | undefined }) =>
-  tier ? <Badge tone={tierTone(tier)}>{words(tier)}</Badge> : <Badge tone="neutral">Unlisted</Badge>;
+  tier ? <Badge tone={tierTone(tier)}>{words(tier)}</Badge> : <Badge tone="neutral">Not listed</Badge>;
 
 export const ComplianceBadge = ({ status }: { status: ComplianceStatus }) => <Badge tone={complianceTone(status)}>{words(status)}</Badge>;
 

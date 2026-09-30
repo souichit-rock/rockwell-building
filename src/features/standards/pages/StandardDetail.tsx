@@ -98,7 +98,7 @@ function Detail({ standard }: { standard: Standard }) {
             const tier = TIERS.find((t) => t === e.target.value);
             if (tier) setTier(a.brandId, tier);
           }}
-          className={`${selectClass} w-40 text-[13px] font-semibold`}
+          className={`${selectClass} sm:w-40 text-[13px] font-semibold`}
         >
           {TIERS.map((t) => (
             <option key={t} value={t}>{sentence(t)}</option>
@@ -249,7 +249,7 @@ function Detail({ standard }: { standard: Standard }) {
 
           <Card title="Linked documents" tight>
             {view.docs.length === 0 ? (
-              <EmptyState icon={FileText} title="No linked documents" body="No document references this standard yet." className="py-6" />
+              <EmptyState icon={FileText} title="No linked documents" body="No document references this standard yet." className="py-6!" />
             ) : (
               <div className="space-y-3">
                 {view.docs.map((d) => (

@@ -12,9 +12,7 @@ import { docStatusTone } from "@/lib/status";
 import { AddRevisionModal } from "../components/DocumentModals";
 import { TitleBlock } from "../components/TitleBlock";
 import { WhereUsed } from "../components/WhereUsed";
-import { DOC_TYPE_LABEL, docPlace, fileSize, governedFloors, latestRev, revisionsNewestFirst, supersession, words } from "../lib";
-
-const LINK = "focus-ring rounded hover:underline";
+import { DOC_TYPE_LABEL, docPlace, fileSize, governedFloors, latestRev, linkClass, revisionsNewestFirst, supersession, words } from "../lib";
 
 /** One side of the supersession chain: each issue links to its own page. The whole row is the click target. */
 function ChainGroup({ label, docs }: { label: string; docs: Document[] }) {
@@ -69,8 +67,8 @@ export default function DocumentDetail() {
     { k: "Document no", v: doc.docNo, mono: true },
     { k: "Type", v: DOC_TYPE_LABEL[doc.type] },
     { k: "Discipline", v: disciplineName },
-    { k: "Tower", v: tower ? <Link to={paths.tower(tower.id)} className={LINK}>{tower.name}</Link> : "Portfolio" },
-    ...(floor ? [{ k: "Floor", v: <Link to={paths.floor(floor.towerId, floor.id)} className={LINK}>{floor.label}</Link> }] : []),
+    { k: "Tower", v: tower ? <Link to={paths.tower(tower.id)} className={linkClass}>{tower.name}</Link> : "Portfolio" },
+    ...(floor ? [{ k: "Floor", v: <Link to={paths.floor(floor.towerId, floor.id)} className={linkClass}>{floor.label}</Link> }] : []),
     { k: "Status", v: <Badge tone={docStatusTone(doc.status)}>{words(doc.status)}</Badge> },
     { k: "Revision", v: rev ? `${rev.rev} · ${fmtDate(rev.date)}` : "—" },
     { k: "Issued by", v: rev?.issuedBy ?? "—" },

@@ -2,9 +2,12 @@ import { useState, type FormEvent } from "react";
 import { Button, Card, Field, Timeline, textareaClass, type TimelineItem } from "@/components/ui";
 import type { WOStatus, WorkOrder } from "@/data/types";
 import { fmtDateTime } from "@/lib/dates";
+import { woStatusTone } from "@/lib/status";
 import { addNote, STATUS_LABEL } from "../lib";
 
-const TONE: Partial<Record<WOStatus, TimelineItem["tone"]>> = { done: "ok", "on-hold": "warn", cancelled: "danger" };
+// Dots follow the status badge tones (lib/status); a status whose badge is neutral or gold keeps the timeline's default gold dot.
+const DOT_TONES = ["ok", "warn", "danger", "info"] as const;
+const dotTone = (s: WOStatus) => DOT_TONES.find((t) => t === woStatusTone(s));
 
 function NoteForm({ woId, actor }: { woId: string; actor: string | undefined }) {
   const [text, setText] = useState("");
@@ -30,12 +33,15 @@ function NoteForm({ woId, actor }: { woId: string; actor: string | undefined }) 
 export function ActivityCard({ wo, actor }: { wo: WorkOrder; actor: string | undefined }) {
   const items: TimelineItem[] = [...wo.timeline]
     .sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
-    .map((e) => ({
-      when: `${fmtDateTime(e.at)} · ${e.by}`,
-      what: e.status ? STATUS_LABEL[e.status] : "Note",
-      note: e.note,
-      ...(e.status && TONE[e.status] ? { tone: TONE[e.status] } : {}),
-    }));
+    .map((e) => {
+      const tone = e.status ? dotTone(e.status) : undefined;
+      return {
+        when: `${fmtDateTime(e.at)} · ${e.by}`,
+        what: e.status ? STATUS_LABEL[e.status] : "Note",
+        note: e.note,
+        ...(tone ? { tone } : {}),
+      };
+    });
   return (
     <Card title="Timeline">
       {items.length === 0 ? <p className="type-small text-muted">Nothing has been logged yet.</p> : <Timeline items={items} />}

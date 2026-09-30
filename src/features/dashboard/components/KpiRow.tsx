@@ -16,7 +16,7 @@ export function KpiRow({ kpis, warranties30 }: { kpis: PortfolioKpis; warranties
       label: "PM overdue", value: fmtNumber(kpis.pmOverdue), delta: `${fmtNumber(kpis.pmDue14d)} more due in 14 days`, to: paths.maintenance(),
       tone: kpis.pmOverdue > 0 ? "hot" : undefined,
     },
-    { label: "Warranties ≤ 90 d", value: fmtNumber(kpis.warranties90d), delta: `${fmtNumber(warranties30)} end within 30 days`, to: paths.warranties() },
+    { label: "Warranties ≤ 90 d", value: fmtNumber(kpis.warranties90d), delta: `${fmtNumber(warranties30)} end within 30 days`, to: paths.assets({ band: ["30d", "90d"] }) },
     {
       label: "Permits due or expired", value: fmtNumber(kpis.permitsDue + kpis.permitsExpired), delta: `${kpis.permitsExpired} expired · ${kpis.permitsDue} due`,
       to: paths.permits(),

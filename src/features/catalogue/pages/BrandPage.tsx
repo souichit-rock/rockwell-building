@@ -1,6 +1,7 @@
 import { Boxes, Ruler, Tags } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 import NotFound from "@/app/NotFound";
+import { useTowerScope } from "@/app/useTowerScope";
 import {
   Badge, Breadcrumb, Button, Card, DataTable, EmptyState, KV, Monogram, Notice, PageHeader, StatTile, type Column,
 } from "@/components/ui";
@@ -24,6 +25,9 @@ export default function BrandPage() {
   const { brandId } = useParams();
   const db = useDb((d) => d);
   const navigate = useNavigate();
+  const { setTowerId } = useTowerScope();
+  // This page counts across every tower; the registry falls back to the rail's tower scope, so a portfolio-wide link clears it.
+  const allTowers = () => setTowerId(null);
   const brand = lookup(db.brands, brandId);
   if (!brand) return <NotFound what="brand" id={brandId} />;
 
@@ -62,7 +66,7 @@ export default function BrandPage() {
       key: "installed", label: "Installed", align: "right", sort: (r) => r.installed,
       render: (r) =>
         r.installed > 0 ? (
-          <Link to={paths.assets({ model: r.model.id })} className={inlineLink}>{fmtNumber(r.installed)}</Link>
+          <Link to={paths.assets({ model: r.model.id })} onClick={allTowers} className={inlineLink}>{fmtNumber(r.installed)}</Link>
         ) : (
           <span className="text-muted">0</span>
         ),
@@ -99,7 +103,7 @@ export default function BrandPage() {
         lede={brand.note}
         actions={
           assets.length > 0 && (
-            <Button to={registry} variant="primary">
+            <Button to={registry} onClick={allTowers} variant="primary">
               <Boxes aria-hidden="true" className="size-4" strokeWidth={2} />
               View {plural(assets.length, "asset")}
             </Button>
@@ -148,7 +152,7 @@ export default function BrandPage() {
                     <Link
                       key={w.id}
                       to={paths.workOrder(w.id)}
-                      className="focus-ring rounded-full bg-surface-2 px-2.5 py-1 font-mono text-[11px] font-bold text-ink-soft transition-colors duration-150 hover:text-ink"
+                      className="focus-ring relative rounded-full bg-surface-2 px-2.5 py-1 font-mono text-[11px] font-bold text-ink-soft transition-colors duration-150 after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] hover:text-ink"
                     >
                       {w.number}
                     </Link>
@@ -183,7 +187,7 @@ export default function BrandPage() {
           <Section
             title="Where used"
             count={assets.length}
-            actions={assets.length > 0 && <Button to={registry} variant="ghost" size="sm">Open in registry</Button>}
+            actions={assets.length > 0 && <Button to={registry} onClick={allTowers} variant="ghost" size="sm">Open in registry</Button>}
           >
             {assets.length === 0 ? (
               <EmptyState icon={Boxes} title="Not installed" body="No asset in any tower uses a model from this brand." />
@@ -207,7 +211,7 @@ export default function BrandPage() {
                 { k: "Models", v: discontinued > 0 ? `${models.length} (${discontinued} discontinued)` : String(models.length) },
                 {
                   k: "Installed",
-                  v: assets.length > 0 ? <Link to={registry} className={inlineLink}>{plural(assets.length, "asset")}</Link> : "None",
+                  v: assets.length > 0 ? <Link to={registry} onClick={allTowers} className={inlineLink}>{plural(assets.length, "asset")}</Link> : "None",
                 },
                 { k: "Towers", v: impact.towerIds.length > 0 ? impact.towerIds.map(towerCode).join(", ") : "—" },
               ]}
@@ -234,7 +238,7 @@ export default function BrandPage() {
                       )}
                       {contact && (
                         <p className="type-small text-muted">
-                          <a href={`tel:${contact.phone.replace(/\s+/g, "")}`} className="focus-ring rounded hover:text-ink">{contact.phone}</a>
+                          <a href={`tel:${contact.phone.replace(/\s+/g, "")}`} className="focus-ring relative inline-block rounded after:absolute after:-inset-y-3 after:inset-x-0 after:content-[''] hover:text-ink">{contact.phone}</a>
                           {v.contract && ` · SLA ${v.contract.slaResponseHours} h response`}
                         </p>
                       )}

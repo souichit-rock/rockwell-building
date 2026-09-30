@@ -62,7 +62,7 @@ export default function WarrantiesPage() {
       return (
         <div>
           <Breadcrumb items={[{ to: back, label: "Warranties" }, { label: "Claim sheet" }]} />
-          <NotFound what="warranty" id={claimId} />
+          <NotFound what="warranty" id={claimId} as="h2" />
         </div>
       );
     }
@@ -93,8 +93,14 @@ export default function WarrantiesPage() {
     );
   }
 
-  const needle = q.trim().toLowerCase();
-  const scoped = rows.filter((r) => (!f.towerId || r.asset.towerId === f.towerId) && (!needle || warrantyHaystack(r).includes(needle)));
+  // Every word must match somewhere in the row, like the /assets registry search ("fire halcyon" finds Halcyon fire pumps).
+  const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const scoped = rows.filter((r) => {
+    if (f.towerId && r.asset.towerId !== f.towerId) return false;
+    if (terms.length === 0) return true;
+    const hay = warrantyHaystack(r);
+    return terms.every((t) => hay.includes(t));
+  });
   const countOf = (band: WarrantyBand) => scoped.filter((r) => r.band === band).length;
   const bandParam = f.get("band");
   const band: BandKey | "all" = isBand(bandParam) ? bandParam : "all";
@@ -152,7 +158,7 @@ export default function WarrantiesPage() {
       key: "wos", label: "Open WOs", align: "right", sort: (r) => r.openWos,
       render: (r) =>
         r.openWos > 0 ? (
-          <Link to={paths.workOrders({ assetId: r.asset.id, view: "list" })} className={`${linkClass} font-bold`}>{fmtNumber(r.openWos)}</Link>
+          <Link to={paths.workOrders({ assetId: r.asset.id, view: "list", tower: r.asset.towerId })} className={`${linkClass} font-bold`}>{fmtNumber(r.openWos)}</Link>
         ) : (
           <span className="text-muted">0</span>
         ),
@@ -177,7 +183,7 @@ export default function WarrantiesPage() {
         actions={
           <Button variant="ghost" disabled={shown.length === 0} onClick={() => downloadCsv("warranties", CSV_COLUMNS, shown)}>
             <Download aria-hidden="true" className="size-4" strokeWidth={2} />
-            CSV
+            Export CSV
           </Button>
         }
       >
@@ -197,7 +203,7 @@ export default function WarrantiesPage() {
         <TowerFilter filters={f} className="w-full sm:w-64" />
       </div>
 
-      <div role="tabpanel" className="space-y-3">
+      <div role="tabpanel" aria-label="Warranties by band" className="space-y-3">
         <p className="type-small text-muted">
           Bands do not overlap: {BAND_LABEL["30d"]} is 0 to 30 days left, {BAND_LABEL["90d"]} is 31 to 90, {BAND_LABEL["365d"]} is 91 to 365, Active is more than a year. Open WOs counts orders still open that were reported while the warranty ran.
         </p>

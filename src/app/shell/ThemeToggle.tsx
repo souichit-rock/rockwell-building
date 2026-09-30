@@ -24,7 +24,7 @@ export function ThemeToggle({ iconOnly = false }: { iconOnly?: boolean }) {
       type="button"
       aria-pressed={dark}
       onClick={toggle}
-      className="focus-ring flex h-9 w-full items-center gap-3 rounded-ctl px-3 text-[12px] font-extrabold uppercase tracking-[.08em] text-nav-muted transition-colors duration-150 hover:bg-navy-hover hover:text-nav-text"
+      className="focus-ring flex h-10 w-full items-center gap-3 rounded-ctl px-3 text-[12px] font-extrabold uppercase tracking-[.08em] text-nav-muted transition-colors duration-150 hover:bg-navy-hover hover:text-nav-text"
     >
       <Icon className="size-[18px] shrink-0" strokeWidth={2} />
       {label}

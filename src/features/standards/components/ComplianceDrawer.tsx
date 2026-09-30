@@ -1,14 +1,13 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import { Badge, Button, Drawer, Field, Modal, Notice, inputClass, textareaClass } from "@/components/ui";
+import { Button, Drawer, Field, Modal, Notice, inputClass, textareaClass } from "@/components/ui";
 import { complianceMatrix } from "@/data/selectors";
 import { newId, upsert, useDb } from "@/data/store";
-import type { Id, Standard, Waiver } from "@/data/types";
+import type { ComplianceStatus, Id, Standard, Waiver } from "@/data/types";
 import { daysFromNow, fmtDate, todayISO } from "@/lib/dates";
 import { plural } from "@/lib/format";
 import { paths } from "@/lib/paths";
-import { complianceTone } from "@/lib/status";
-import { governedAssets, heatTone, placeOf, sharePct, sumCells, type Governed } from "../lib";
+import { governedAssets, placeOf, sharePct, sumCells, type Governed } from "../lib";
 import { ComplianceBadge, TierBadge } from "./parts";
 
 export interface OpenCell { towerId: Id; standardId: Id }
@@ -24,6 +23,8 @@ interface Row extends Governed {
 }
 
 const FORM_ID = "raise-waiver-form";
+/** How the prefilled work-order title states the finding; anything not listed is a plain deviation. */
+const VERB: Partial<Record<ComplianceStatus, string>> = { "phase-out": "is on the phase-out list under", waived: "is operating under a waiver from" };
 type Errors = Partial<Record<"reason" | "approvedBy" | "approvedAt" | "expiresAt", string>>;
 
 function WaiverForm({ row, standard, approver, onSaved }: { row: Row; standard: Standard; approver: string; onSaved: () => void }) {
@@ -80,6 +81,12 @@ function WaiverForm({ row, standard, approver, onSaved }: { row: Row; standard: 
 export function ComplianceDrawer({ cell, onClose }: { cell: OpenCell | null; onClose: () => void }) {
   const [waiverFor, setWaiverFor] = useState<Id | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
+  const flashRef = useRef<HTMLDivElement>(null);
+
+  // the "Raise waiver" button that had focus is gone once the asset counts as waived, so the confirmation takes focus
+  useEffect(() => {
+    if (flash) flashRef.current?.focus();
+  }, [flash]);
 
   const view = useDb((db) => {
     const standard = cell && db.standards[cell.standardId];
@@ -124,15 +131,22 @@ export function ComplianceDrawer({ cell, onClose }: { cell: OpenCell | null; onC
             <div className="space-y-2">
               <Link to={paths.standard(view.standard.id)} className="focus-ring rounded text-[14px] font-bold text-ink hover:underline">{view.standard.title}</Link>
               <p className="text-xs text-ink-soft">{plural(view.totals.total, "governed asset")} in {view.tower.name}</p>
-              <div className="flex flex-wrap gap-2">
-                <Badge tone={heatTone(pct)}>{pct === null ? "n/a" : `${pct}% compliant`}</Badge>
-                {view.totals.deviations > 0 && <Badge tone={complianceTone("deviation")}>{plural(view.totals.deviations, "deviation")}</Badge>}
-                {view.totals.phaseOut > 0 && <Badge tone={complianceTone("phase-out")}>{view.totals.phaseOut} phase-out</Badge>}
-                {view.totals.waived > 0 && <Badge tone={complianceTone("waived")}>{view.totals.waived} waived</Badge>}
-              </div>
+              {/* counts are plain text: Badge text is the enum value only (design-system 4.6) */}
+              <p className="text-xs font-semibold tabular-nums text-ink">
+                {[
+                  pct === null ? "n/a" : `${pct}% compliant`,
+                  view.totals.deviations > 0 && plural(view.totals.deviations, "deviation"),
+                  view.totals.phaseOut > 0 && `${view.totals.phaseOut} phase-out`,
+                  view.totals.waived > 0 && `${view.totals.waived} waived`,
+                ].filter(Boolean).join(" · ")}
+              </p>
             </div>
 
-            {flash && <Notice tone="ok">{flash}</Notice>}
+            {flash && (
+              <div ref={flashRef} tabIndex={-1} className="focus-ring rounded-ctl">
+                <Notice tone="ok">{flash}</Notice>
+              </div>
+            )}
 
             {view.rows.length === 0 ? (
               <Notice tone="ok">Every governed asset in this cell complies with the standard.</Notice>
@@ -180,7 +194,7 @@ export function ComplianceDrawer({ cell, onClose }: { cell: OpenCell | null; onC
                         to={paths.newWorkOrder({
                           assetId: r.asset.id,
                           towerId: r.asset.towerId,
-                          title: `${r.asset.tag}: ${r.brandName} does not meet ${view.standard.code}`,
+                          title: `${r.asset.tag}: ${r.brandName} ${VERB[r.c.status] ?? "does not meet"} ${view.standard.code}`,
                         })}
                       >
                         Raise work order

@@ -98,7 +98,7 @@ export default function Compliance() {
                     <th scope="col" className={cn(TH, "sticky left-0 z-10 text-left")}>Standard</th>
                     {view.towers.map((t) => (
                       <th key={t.id} scope="col" className={TH}>
-                        <Link to={paths.tower(t.id)} className="focus-ring rounded hover:underline">{t.code}</Link>
+                        <Link to={paths.tower(t.id)} className="focus-ring relative rounded after:absolute after:-inset-x-2 after:-inset-y-3.5 after:content-[''] hover:underline">{t.code}</Link>
                         <span className="block text-[10px] font-semibold normal-case tracking-normal">{t.name}</span>
                       </th>
                     ))}

@@ -26,7 +26,7 @@ function Skyline({ towers }: { towers: Tower[] }) {
             <rect x={x} y={y} width={W} height={h} rx="2" className="fill-navy-hover stroke-navy-line" strokeWidth="1" />
             <path d={floors} className="stroke-navy-line" strokeWidth="0.4" opacity="0.7" />
             <rect x={x} y={y} width={W} height="2" rx="1" className="fill-gold" />
-            <text x={x + W / 2} y="118" textAnchor="middle" className="fill-nav-muted font-mono text-[9px]">{t.code}</text>
+            <text x={x + W / 2} y="118" textAnchor="middle" className="fill-nav-muted font-mono text-[11px]">{t.code}</text>
           </g>
         );
       })}
@@ -35,7 +35,7 @@ function Skyline({ towers }: { towers: Tower[] }) {
 }
 
 /** Navy hero (design-system §3.2). Eyebrow, H1 and pill text are fixed by spec 6.1. */
-export function Hero({ towers, assets, today, tourHref }: { towers: Tower[]; assets: number; today: string; tourHref: string }) {
+export function Hero({ towers, assets, today }: { towers: Tower[]; assets: number; today: string }) {
   return (
     <header className="flex flex-col gap-6 rounded-lg bg-hero p-6 text-nav-text md:flex-row md:items-end md:justify-between lg:p-8">
       <div className="min-w-0">
@@ -52,7 +52,8 @@ export function Hero({ towers, assets, today, tourHref }: { towers: Tower[]; ass
           {fmtNumber(towers.length)} towers · {fmtNumber(assets)} assets · as of {fmtDate(today)}
         </p>
         <div className="mt-5 flex flex-wrap gap-2">
-          <Button to={tourHref} variant="primary">Start the tour</Button>
+          {/* the tour list is on this page (TourCard, id="tour"): scroll to it instead of skipping to stop 2 */}
+          <Button variant="primary" onClick={() => document.getElementById("tour")?.scrollIntoView({ block: "start" })}>Start the tour</Button>
           <Button to={paths.towers()} variant="ghost">Browse towers</Button>
         </div>
       </div>

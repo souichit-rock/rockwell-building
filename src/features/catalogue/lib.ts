@@ -113,7 +113,9 @@ export const keySpec = (m: Model): string => specLine(m, 2) || "—";
 // --- Catalogue filters ----------------------------------------------------------------------------------------------------------
 
 export interface CatalogueFilters { discipline: DisciplineCode | null; type: Id | null; q: string; towerId: Id | null }
-export interface BrandRow { brand: Brand; installed: number; models: number; approvals: BrandApprovalRow[]; best?: ApprovalTier }
+export interface BrandRow {
+  brand: Brand; disciplineNames: string[]; installed: number; models: number; approvals: BrandApprovalRow[]; best?: ApprovalTier;
+}
 
 const modelHay = (r: ModelRow): string =>
   [r.model.modelNo, r.brand?.name, r.type?.name, r.discipline?.name, ...Object.values(r.model.specs)].join(" ").toLowerCase();
@@ -141,10 +143,11 @@ export function catalogue(db: Db, f: CatalogueFilters): { brands: BrandRow[]; mo
       const structural =
         (!f.discipline || brand.disciplineIds.includes(f.discipline)) && (!f.type || mine.some((r) => r.model.equipmentTypeId === f.type))
         && (!f.towerId || installed > 0);
-      const brandHay = [brand.name, brand.country, brand.note, ...brand.disciplineIds.map((d) => db.disciplines[d]?.name)].join(" ").toLowerCase();
+      const disciplineNames = brand.disciplineIds.map((d) => db.disciplines[d]?.name ?? d);
+      const brandHay = [brand.name, brand.country, brand.note, ...disciplineNames].join(" ").toLowerCase();
       if (!structural || !(matches(brandHay) || mine.some((r) => matches(modelHay(r))))) return [];
       const approvals = approvalsOf(db, brand.id);
-      return [{ brand, installed, models: mine.length, approvals, best: bestTier(approvals) }];
+      return [{ brand, disciplineNames, installed, models: mine.length, approvals, best: bestTier(approvals) }];
     })
     .sort((a, b) => collator.compare(a.brand.name, b.brand.name));
 

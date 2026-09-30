@@ -13,6 +13,19 @@ import { paths } from "@/lib/paths";
 
 export const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
+/**
+ * Inline link in a KV card or a sentence: always underlined, so it reads as a link without a pointer (WCAG 1.4.1). Links inside
+ * DataTable cells and stretched-card titles keep the hover-only underline.
+ */
+export const linkClass =
+  "focus-ring rounded underline decoration-line-strong decoration-1 underline-offset-2 transition-colors duration-150 hover:decoration-ink";
+
+/** A full YYYY-MM-DD. `<input type=date>` also hands back 5 and 6 digit years ("20260-09-30"), which sort ahead of every real date. */
+export const isISODate = (s: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(s);
+
+/** `s` cut to `max` characters, the last one an ellipsis. */
+export const clip = (s: string, max: number): string => (s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s);
+
 /** Badge text: the enum value with hyphens replaced by spaces (design-system §4.6). */
 export const words = (s: string) => s.replace(/-/g, " ");
 
@@ -176,7 +189,7 @@ export function describeLink(db: Db, l: DocLink, docId: Id): LinkView {
   }
 }
 
-/** Greedy word wrap for SVG text; the last allowed line is clipped with an ellipsis. */
+/** Greedy word wrap for SVG text; the last allowed line, and any single word longer than `max`, is clipped with an ellipsis. */
 export function wrapText(text: string, max: number, maxLines: number): string[] {
   const lines: string[] = [];
   let cur = "";
@@ -187,9 +200,8 @@ export function wrapText(text: string, max: number, maxLines: number): string[] 
     } else cur = cur ? `${cur} ${w}` : w;
   }
   if (cur) lines.push(cur);
-  if (lines.length <= maxLines) return lines;
-  const rest = lines.slice(maxLines - 1).join(" ");
-  return [...lines.slice(0, maxLines - 1), rest.length > max ? `${rest.slice(0, max - 1).trimEnd()}…` : rest];
+  const kept = lines.length <= maxLines ? lines : [...lines.slice(0, maxLines - 1), lines.slice(maxLines - 1).join(" ")];
+  return kept.map((l) => clip(l, max));
 }
 
 // --- Register filters and KPIs --------------------------------------------------------------------------------------------------

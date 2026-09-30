@@ -21,8 +21,8 @@ function Sparkline({ label, series }: { label: string; series: Reading[] }) {
   return (
     <figure className="m-0 min-w-0 rounded-card border border-line bg-surface-2 p-4">
       <figcaption className="type-eyebrow">{label}</figcaption>
-      <p className="mt-1 text-[20px] font-black leading-tight tracking-[-.02em] tabular-nums text-ink">
-        {fmtNumber(last.value)} <span className="text-[12px] font-bold tracking-normal text-muted">{last.unit}</span>
+      <p className="mt-1 text-[28px] font-black leading-[1.1] tracking-[-.03em] tabular-nums text-ink">
+        {fmtNumber(last.value)} <span className="text-xs font-bold tracking-normal text-muted">{last.unit}</span>
       </p>
       <svg
         width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" className="mt-2 block h-auto max-w-full overflow-visible"
@@ -57,7 +57,7 @@ export function HistoryTab({ p }: { p: Passport }) {
       )}
       <Card
         title="Service history"
-        actions={<Button to={paths.inspections({ assetId: p.asset.id })} variant="ghost" size="sm">All inspections</Button>}
+        actions={<Button to={paths.inspections({ assetId: p.asset.id, tower: p.tower.id })} variant="ghost" size="sm">All inspections</Button>}
       >
         {p.history.length > 0 ? (
           <Timeline items={timelineOf(p.history)} />

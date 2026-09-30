@@ -144,7 +144,7 @@ function Form() {
                 {Object.values(db.towers).sort(byName).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
             </Field>
-            <Field label="Floor">
+            <Field label="Floor" hint="Narrows the space and asset lists.">
               <select className={selectClass} value={f.floorId} disabled={!f.towerId} onChange={(e) => pickFloor(e.target.value)}>
                 <option value="">{f.towerId ? "Any floor" : "Choose a tower first"}</option>
                 {floors.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}

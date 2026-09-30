@@ -1,26 +1,27 @@
 import { CalendarClock, ChevronDown, CircleCheck, ClipboardX, FileWarning, ShieldAlert, Siren, TriangleAlert, type LucideIcon } from "lucide-react";
 import { Link } from "react-router";
 import { Badge, Card, EmptyState } from "@/components/ui";
-import type { AttentionItem, AttentionKind } from "@/data/types";
+import type { AttentionItem, AttentionKind, BadgeTone } from "@/data/types";
 import { plural } from "@/lib/format";
 import { paths } from "@/lib/paths";
-import { healthTone } from "@/lib/status";
+import { dueTone, healthTone, priorityTone, resultTone, warrantyTone } from "@/lib/status";
 import type { AttentionGroup } from "../lib";
 
 const VISIBLE = 4;
 
-// short category labels for the badge; the icon repeats the kind for the eye
-const KIND: Record<AttentionKind, { icon: LucideIcon; label: string }> = {
-  "wo-p1": { icon: Siren, label: "P1" },
-  "wo-p2": { icon: TriangleAlert, label: "P2" },
-  "pm-overdue": { icon: CalendarClock, label: "PM" },
+// short category labels for the badge; the icon repeats the kind for the eye. Tone comes from lib/status so a badge matches the same state elsewhere;
+// a permit is the one kind that needs the item (expired vs due is only known there).
+const KIND: Record<AttentionKind, { icon: LucideIcon; label: string; tone?: BadgeTone }> = {
+  "wo-p1": { icon: Siren, label: "P1", tone: priorityTone("P1") },
+  "wo-p2": { icon: TriangleAlert, label: "P2", tone: priorityTone("P2") },
+  "pm-overdue": { icon: CalendarClock, label: "PM", tone: dueTone("overdue") },
   permit: { icon: FileWarning, label: "Permit" },
-  "warranty-30d": { icon: ShieldAlert, label: "Warranty" },
-  "inspection-fail": { icon: ClipboardX, label: "Failed" },
+  "warranty-30d": { icon: ShieldAlert, label: "Warranty", tone: warrantyTone("30d") },
+  "inspection-fail": { icon: ClipboardX, label: "Failed", tone: resultTone("fail") },
 };
 
 function Row({ item }: { item: AttentionItem }) {
-  const { icon: Icon, label } = KIND[item.kind];
+  const { icon: Icon, label, tone } = KIND[item.kind];
   return (
     <li>
       <Link
@@ -34,7 +35,7 @@ function Row({ item }: { item: AttentionItem }) {
           <span className="line-clamp-2 text-[14px] font-bold text-ink">{item.title}</span>
           <span className="block truncate text-xs text-ink-soft">{item.subtitle}</span>
         </span>
-        <Badge tone={item.tone}>{label}</Badge>
+        <Badge tone={tone ?? item.tone}>{label}</Badge>
       </Link>
     </li>
   );

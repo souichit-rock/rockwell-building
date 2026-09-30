@@ -52,7 +52,7 @@ export default function VendorsPage() {
         actions={
           <Button variant="ghost" disabled={shown.length === 0} onClick={() => downloadCsv("vendors", CSV_COLUMNS, shown)}>
             <Download aria-hidden="true" className="size-4" strokeWidth={2} />
-            CSV
+            Export CSV
           </Button>
         }
       />

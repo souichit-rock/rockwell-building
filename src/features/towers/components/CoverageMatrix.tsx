@@ -48,7 +48,7 @@ export function CoverageMatrix({ db, towerId, model }: { db: Db; towerId: Id; mo
                   scope="row"
                   className="sticky left-0 z-[1] whitespace-nowrap border-b border-line bg-surface px-3 py-2 text-left font-semibold text-ink transition-colors duration-150 group-last:border-b-0 group-hover:bg-surface-2"
                 >
-                  <Link to={paths.floor(towerId, f.id)} className="focus-ring rounded hover:underline">{f.label}</Link>
+                  <Link to={paths.floor(towerId, f.id)} className="focus-ring relative rounded hover:underline after:absolute after:-inset-x-2 after:-inset-y-2.5 after:content-['']">{f.label}</Link>
                   <span className="ml-2 text-xs font-medium text-muted">{FLOOR_KIND_LABEL[f.kind]}</span>
                 </th>
                 {model.disciplines.map((d) => {
@@ -64,7 +64,7 @@ export function CoverageMatrix({ db, towerId, model }: { db: Db; towerId: Id; mo
                     );
                   }
                   const doc = cell.docId ? db.documents[cell.docId] : undefined;
-                  const to = doc ? paths.document(doc.id) : paths.documents({ tower: towerId, discipline: d.id, type: "as-built" });
+                  const to = doc ? paths.document(doc.id) : paths.documents({ tower: towerId, discipline: d.id, type: "as-built", current: 0 });
                   const title = doc ? `${doc.docNo} · ${doc.title}` : `No as-built for ${d.name} on ${f.label}. Open the register.`;
                   return (
                     <td key={d.id} className={td}>

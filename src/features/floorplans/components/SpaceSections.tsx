@@ -7,7 +7,7 @@ import { fmtDate } from "@/lib/dates";
 import { plural } from "@/lib/format";
 import { paths } from "@/lib/paths";
 import { assetStatusTone, conditionTone, docStatusTone, dueTone, priorityTone, warrantyTone, woStatusTone } from "@/lib/status";
-import { WARRANTY_SHORT, assetBrief, capitalise, kindLabel, overrideNote, words, type RoomDoc } from "../lib";
+import { assetBrief, capitalise, kindLabel, overrideNote, words, type RoomDoc } from "../lib";
 import { Section } from "./Section";
 
 // the ::after grows the hit area to a 40px-tall target without moving the text
@@ -63,8 +63,8 @@ export function SpaceAssets({ db, assets }: { db: Db; assets: Asset[] }) {
       key: "warranty", label: "Warranty", sort: (r) => r.b.warranty?.end ?? "9999-12-31",
       render: (r) => (
         <span className="flex flex-col items-start gap-1">
-          <Badge tone={warrantyTone(r.b.band)}>{WARRANTY_SHORT[r.b.band]}</Badge>
-          {r.b.warranty && <span className="whitespace-nowrap text-xs font-medium text-muted">to {fmtDate(r.b.warranty.end)}</span>}
+          <Badge tone={warrantyTone(r.b.band)}>{words(r.b.band)}</Badge>
+          {r.b.warranty && <span className="whitespace-nowrap text-xs font-medium text-muted">Ends {fmtDate(r.b.warranty.end)}</span>}
         </span>
       ),
     },

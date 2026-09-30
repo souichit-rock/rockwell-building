@@ -4,6 +4,7 @@ import {
 import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { CommandPalette } from "@/app/CommandPalette";
+import { ErrorBoundary } from "@/app/ErrorBoundary";
 import { Brand } from "@/app/shell/Brand";
 import { NavGroup, type NavGroupProps } from "@/app/shell/NavGroup";
 import { ResetDemo } from "@/app/shell/ResetDemo";
@@ -165,7 +166,8 @@ export function Shell() {
           }}
           onClose={() => setDrawerOpen(false)}
           onClick={(e) => {
-            if (e.target === e.currentTarget) setDrawerOpen(false); // scrim
+            // scrim, or any link in the drawer: tapping the page you are already on changes no pathname, so the route effect would not close it
+            if (e.target === e.currentTarget || (e.target as Element).closest("a")) setDrawerOpen(false);
           }}
           className="m-0 mr-auto h-dvh max-h-dvh w-[280px] max-w-[85vw] flex-col border-r border-navy-line bg-navy p-0 text-nav-text shadow-pop transition-transform duration-200 backdrop:bg-navy-deep/60 open:flex starting:open:-translate-x-full"
         >
@@ -188,9 +190,12 @@ export function Shell() {
         </dialog>
 
         <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1400px] flex-1 p-4 outline-none lg:p-6">
-          <Suspense fallback={<Loading />}>
-            <Outlet />
-          </Suspense>
+          {/* the boundary sits inside the layout, so a crashing page leaves the rail, Reset demo and the theme toggle usable */}
+          <ErrorBoundary>
+            <Suspense fallback={<Loading />}>
+              <Outlet />
+            </Suspense>
+          </ErrorBoundary>
         </main>
 
         <footer className="border-t border-line px-4 py-5 text-center text-xs text-muted">{FOOTER}</footer>

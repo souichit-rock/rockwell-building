@@ -70,9 +70,13 @@ export default function CataloguePage() {
     const ids = new Set(modelTypes.map((t) => t.disciplineId));
     return Object.values(db.disciplines).filter((d) => ids.has(d.id)).sort((a, b) => a.order - b.order);
   }, [db, modelTypes]);
-  const typeOptions = discipline ? modelTypes.filter((t) => t.disciplineId === discipline) : modelTypes;
+  const byDiscipline = discipline ? modelTypes.filter((t) => t.disciplineId === discipline) : modelTypes;
+  // a type set through the query but outside the list above stays selectable, so the select never reads "All" while filtering
+  const activeType = type ? db.equipmentTypes[type] : undefined;
+  const typeOptions = activeType && !byDiscipline.includes(activeType) ? [...byDiscipline, activeType] : byDiscipline;
 
-  const installedTotal = view.brands.reduce((n, b) => n + b.installed, 0);
+  // Sum of the listed models, so the tile matches the Models table under every filter (a brand's own total would ignore type / search).
+  const installedTotal = view.models.reduce((n, r) => n + r.installed, 0);
   const restrictedBrands = view.brands.filter((b) => b.approvals.some((a) => isRestricted(a.tier))).length;
   const filtered = Boolean(discipline || type || q || queryTower);
   const suffix = tower ? ` (${tower.code})` : "";

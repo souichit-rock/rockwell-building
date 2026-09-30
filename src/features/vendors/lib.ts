@@ -1,6 +1,6 @@
 // Feature-only derived values for vendors and warranties: pure functions of the Db snapshot, joined for display.
 // Warranty bands, due states and open work orders always come from selectors.ts; nothing here re-implements them.
-import { dueStatus, isOverdueWo, openWorkOrders, warrantyBand } from "@/data/selectors";
+import { PERMIT_DUE_DAYS, dueStatus, isOverdueWo, openWorkOrders, warrantyBand } from "@/data/selectors";
 import type {
   Asset, Brand, Contact, Db, Discipline, Document, DueStatus, Id, ISODate, Model, PermitStatus, PMPlan, Tower, Vendor, VendorKind,
   Warranty, WarrantyBand, WorkOrder,
@@ -9,8 +9,8 @@ import { daysUntil, todayISO } from "@/lib/dates";
 import { fmtNumber, plural } from "@/lib/format";
 import { paths } from "@/lib/paths";
 
-/** Spec 6.10: the accreditation badge shows when accreditation ends within 60 days (or has lapsed). */
-export const ACCREDITATION_DUE_DAYS = 60;
+/** Spec 6.10: the accreditation badge shows when accreditation ends within 60 days (or has lapsed): the permit window, so status comes from permitStatus. */
+export const ACCREDITATION_DUE_DAYS = PERMIT_DUE_DAYS;
 /** A contract ending within a quarter is flagged on the vendor card and page. */
 export const CONTRACT_ENDING_DAYS = 90;
 /** Keeps the printed claim sheet on one A4 page; the sheet says how many more exist. */
@@ -36,7 +36,7 @@ export function relDays(days: number): string {
   if (days === 0) return "today";
   return days > 0 ? `in ${plural(days, "day")}` : `${plural(-days, "day")} ago`;
 }
-/** expired / due / valid for a date with a warning window. Typed as PermitStatus so the tone comes from permitTone in @/lib/status. */
+/** Contract-window state only (accreditation uses permitStatus). Typed as PermitStatus so the tone comes from permitTone in @/lib/status. */
 export const expiryState = (days: number, within: number): PermitStatus => (days < 0 ? "expired" : days <= within ? "due" : "valid");
 
 /** Same wording as the warranty tabs: bands are exclusive ("30d" is 0 to 30 days left, "90d" is 31 to 90). */
@@ -146,7 +146,8 @@ export interface VendorDetail {
 }
 
 export function vendorDetail(db: Db, vendorId: Id, today: ISODate = todayISO()): VendorDetail | undefined {
-  const vendor = db.vendors[vendorId];
+  // Own-property guard: "constructor" / "toString" would otherwise resolve to an inherited function and crash the render.
+  const vendor = Object.hasOwn(db.vendors, vendorId) ? db.vendors[vendorId] : undefined;
   if (!vendor) return undefined;
   const bands = new Map<Id, WarrantyBand>(Object.values(db.warranties).map((w): [Id, WarrantyBand] => [w.assetId, warrantyBand(w.end, today)]));
   const tagOf = (id?: Id) => (id ? (db.assets[id]?.tag ?? id) : "");

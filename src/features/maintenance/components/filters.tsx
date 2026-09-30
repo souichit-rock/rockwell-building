@@ -30,8 +30,8 @@ export function useQueryParams(): { get: (key: string) => string | undefined; se
 }
 
 /**
- * The tower filter: the page's own ?tower= wins over the rail's tower scope. "?tower=all" is the explicit "All towers" choice made
- * on this page while a scope is set (an empty value would just drop the key and fall back to the scope).
+ * The tower filter: the page's own ?tower= wins over the rail's tower scope. Choosing "All towers" drops the key and also clears the
+ * rail scope, as on every other list route (otherwise the scope would filter the page again).
  */
 export function useTowerFilter(): {
   towerId: Id | undefined;
@@ -46,13 +46,15 @@ export function useTowerFilter(): {
   const { towerId: scope, setTowerId } = useTowerScope();
   const towers = useDb((db) => db.towers);
   const raw = get("tower");
-  const queried = raw === "all" ? null : pick(towers, raw)?.id;
-  const towerId = queried === undefined ? (scope ?? undefined) : (queried ?? undefined);
+  const queried = pick(towers, raw)?.id;
   return {
-    towerId,
+    towerId: queried ?? scope ?? undefined,
     queryTower: raw,
     scopedTower: queried === undefined && scope ? pick(towers, scope) : undefined,
-    setTower: (id) => set({ tower: id || (scope ? "all" : null) }),
+    setTower: (id) => {
+      set({ tower: id || null });
+      if (!id) setTowerId(null);
+    },
     clearScope: () => setTowerId(null),
   };
 }

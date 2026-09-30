@@ -40,7 +40,7 @@ export function ChipRow({ label, allCount, value, items, onPick }: {
   );
 }
 
-/** Shown while the shared tower scope is what filters the list; clicking it clears the scope. */
+/** Shown while the shared tower scope is what filters the list; clicking it clears the scope. Same label as every other list route. */
 export function ScopeChip({ name, onClear }: { name: string; onClear: () => void }) {
-  return <Chip label={`Scoped to ${name} · clear`} active onClick={onClear} />;
+  return <Chip label={`Scoped to ${name} ×`} active onClick={onClear} />;
 }

@@ -33,7 +33,7 @@ export default function FloorPlanPage() {
   if (hl && target && target.floorId !== floor.id) {
     return <Navigate replace to={paths.floor(target.towerId, target.floorId, { highlight: highlightValue(hl), layer: parseLayers(sp.get("layer"), db) })} />;
   }
-  return <FloorView key={floor.id} db={db} tower={tower} floor={floor} />;
+  return <FloorView db={db} tower={tower} floor={floor} />; // no key: a remount on floor change would drop keyboard focus from the floor select and prev/next links
 }
 
 function FloorView({ db, tower, floor }: { db: Db; tower: Tower; floor: Floor }) {
@@ -63,12 +63,13 @@ function FloorView({ db, tower, floor }: { db: Db; tower: Tower; floor: Floor })
     const row = chipRow.current;
     const on = row?.querySelector<HTMLElement>("[aria-pressed='true']");
     if (row && on && on.offsetLeft + on.offsetWidth > row.clientWidth) row.scrollLeft = on.offsetLeft - 16;
-  }, [layerKey]);
-  // a highlight that arrives while the page is open (palette, a link on this floor) re-selects and re-centres
-  const [seen, setSeen] = useState(hlRaw);
-  if (seen !== hlRaw) {
-    setSeen(hlRaw);
-    if (hl) {
+  }, [layerKey, floor.id]);
+  // a highlight that arrives while the page is open (palette, a link on this floor) re-selects and re-centres; a new floor starts fresh
+  const [seen, setSeen] = useState({ floor: floor.id, hl: hlRaw });
+  if (seen.floor !== floor.id || seen.hl !== hlRaw) {
+    const newFloor = seen.floor !== floor.id;
+    setSeen({ floor: floor.id, hl: hlRaw });
+    if (newFloor || hl) {
       setView(focus ?? FULL);
       setSel(selFor(db, floor.id, hl));
       setDrawer(false);
@@ -141,7 +142,7 @@ function FloorView({ db, tower, floor }: { db: Db; tower: Tower; floor: Floor })
         title={`${floor.label} · ${FLOOR_KIND_LABEL[floor.kind]}`}
         lede={`${plural(spaces.length, "space")} and ${plural(floorAssets.length, "asset")} on this floor. Schematic plan, not to scale.`}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             {prev ? (
               <Button to={paths.floor(tower.id, prev.id, { layer: layers })} variant="ghost" aria-label={`Previous floor, ${prev.label}`}>
                 <ChevronLeft className="size-4" strokeWidth={2} />{prev.label}
@@ -149,7 +150,7 @@ function FloorView({ db, tower, floor }: { db: Db; tower: Tower; floor: Floor })
             ) : (
               <Button variant="ghost" disabled aria-label="No lower floor"><ChevronLeft className="size-4" strokeWidth={2} />—</Button>
             )}
-            <div className="w-40 sm:w-60">
+            <div className="min-w-0 flex-1 sm:w-60 sm:flex-none">
               <select aria-label="Floor" value={floor.id} onChange={(e) => goTo(e.target.value)} className={selectClass}>
                 {floors.map((f) => (
                   <option key={f.id} value={f.id}>{f.label} · {FLOOR_KIND_LABEL[f.kind]}</option>

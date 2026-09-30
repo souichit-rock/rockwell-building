@@ -22,7 +22,7 @@ export function HeatCell({ totals, label, selected, onOpen }: { totals: Totals; 
         <span className="sr-only">{label}: </span>
         <span className="text-[16px] font-black leading-tight tabular-nums">{pct}%</span>
         <span className="text-[11px] font-semibold tabular-nums">{totals.deviations === 0 ? "No deviations" : plural(totals.deviations, "deviation")}</span>
-        {totals.phaseOut > 0 && <span className="text-[11px] font-medium tabular-nums opacity-80">{totals.phaseOut} phase-out</span>}
+        {totals.phaseOut > 0 && <span className="text-[11px] font-medium tabular-nums">{totals.phaseOut} phase-out</span>}
       </>
     );
 

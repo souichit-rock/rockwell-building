@@ -13,7 +13,7 @@ import { fmtNumber, plural } from "@/lib/format";
 import { paths } from "@/lib/paths";
 import { assetStatusTone, complianceTone, conditionTone, dueTone, warrantyTone } from "@/lib/status";
 import { QuerySearch } from "../components/QuerySearch";
-import { BAND_OPTIONS, FILTER_KEYS, LINK, STATUSES, buildRows, cap, matches, readFilters, words, type AssetRow } from "../lib";
+import { BAND_OPTIONS, FILTER_KEYS, LINK, STATUSES, buildRows, cap, matches, own, readFilters, words, type AssetRow } from "../lib";
 
 // One spec per visible column: the table and the CSV are built from the same list, so the headers cannot drift apart.
 type Spec = Column<AssetRow> & { csv: (r: AssetRow) => string };
@@ -159,9 +159,9 @@ export default function AssetRegistry() {
   const bandValue = f.bands.join(",");
   const bandKnown = BAND_OPTIONS.some((o) => o.value === bandValue);
   const linkChips = [
-    f.brand && { key: "brand", label: `Brand: ${db.brands[f.brand]?.name ?? f.brand}` },
-    f.model && { key: "model", label: `Model: ${db.models[f.model]?.modelNo ?? f.model}` },
-    f.vendor && { key: "vendor", label: `Vendor: ${db.vendors[f.vendor]?.name ?? f.vendor}` },
+    f.brand && { key: "brand", label: `Brand: ${own(db.brands, f.brand)?.name ?? f.brand}` },
+    f.model && { key: "model", label: `Model: ${own(db.models, f.model)?.modelNo ?? f.model}` },
+    f.vendor && { key: "vendor", label: `Vendor: ${own(db.vendors, f.vendor)?.name ?? f.vendor}` },
   ].filter((c): c is { key: string; label: string } => !!c);
 
   return (
@@ -216,7 +216,7 @@ export default function AssetRegistry() {
             <FilterSelect label="Warranty band" value={bandValue} onChange={(v) => patch({ band: v || null })}>
               <option value="">Any warranty</option>
               {BAND_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              {!bandKnown && bandValue && <option value={bandValue}>{bandValue}</option>}
+              {!bandKnown && bandValue && <option value={bandValue}>{cap(f.bands.map(words).join(", "))}</option>}
             </FilterSelect>
           </div>
 

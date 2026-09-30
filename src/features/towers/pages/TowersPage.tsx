@@ -1,8 +1,8 @@
-import { Building2, X } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router";
 import { useTowerScope } from "@/app/useTowerScope";
-import { Button, EmptyState, PageHeader } from "@/components/ui";
+import { Button, Chip, EmptyState, PageHeader } from "@/components/ui";
 import { assetsIn, openWorkOrders, towerHealth } from "@/data/selectors";
 import { useDb } from "@/data/store";
 import { plural } from "@/lib/format";
@@ -13,7 +13,10 @@ export default function TowersPage() {
   const { towerId: scoped, setTowerId } = useTowerScope();
   const [params, setParams] = useSearchParams();
   const fromQuery = params.get("tower");
-  const active = fromQuery || scoped; // the route query beats the rail scope
+  // hasOwn: an unknown or prototype-key id ("constructor") must not win over the rail scope or title the chip
+  const known = (id: string | null) => (id !== null && Object.hasOwn(db.towers, id) ? id : null);
+  const queryTower = known(fromQuery);
+  const active = queryTower ?? known(scoped); // the route query beats the rail scope
 
   const cards = useMemo(
     () =>
@@ -28,7 +31,7 @@ export default function TowersPage() {
     [db, active],
   );
   const totalAssets = cards.reduce((n, c) => n + c.assets, 0);
-  const activeName = active ? (db.towers[active]?.name ?? active) : null;
+  const activeName = active ? db.towers[active].name : null;
 
   // Clearing drops the scope too, otherwise removing ?tower= would silently fall back to the rail's tower.
   const clear = () => {
@@ -48,14 +51,7 @@ export default function TowersPage() {
         eyebrow="Overview"
         title="Towers"
         lede={`${plural(cards.length, "tower")} and ${plural(totalAssets, "tracked asset")} in view. Health is scored 0 to 100 from overdue PM, open P1 and P2 work orders, failed inspections, expired permits and expired warranties on critical assets.`}
-        actions={
-          activeName && (
-            <Button variant="ghost" size="sm" onClick={clear} aria-label={`Clear tower filter, ${activeName}`}>
-              {fromQuery ? "Filtered to" : "Scoped to"} {activeName}
-              <X aria-hidden="true" className="size-3.5" strokeWidth={2} />
-            </Button>
-          )
-        }
+        actions={activeName && <Chip label={`${queryTower ? "Filtered to" : "Scoped to"} ${activeName} ×`} active onClick={clear} />}
       />
       {cards.length === 0 ? (
         <EmptyState

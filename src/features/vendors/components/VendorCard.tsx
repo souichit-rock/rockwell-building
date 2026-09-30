@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { Badge, Monogram } from "@/components/ui";
+import { permitStatus } from "@/data/selectors";
 import { fmtDate } from "@/lib/dates";
 import { fmtNumber } from "@/lib/format";
 import { paths } from "@/lib/paths";
 import { permitTone } from "@/lib/status";
-import { ACCREDITATION_DUE_DAYS, CONTRACT_ENDING_DAYS, expiryState, relDays, words, type VendorRow } from "../lib";
+import { CONTRACT_ENDING_DAYS, expiryState, relDays, words, type VendorRow } from "../lib";
 import { ContactActions } from "./bits";
 
 function Stat({ label, children }: { label: string; children: ReactNode }) {
@@ -21,7 +22,7 @@ function Stat({ label, children }: { label: string; children: ReactNode }) {
 export function VendorCard({ row }: { row: VendorRow }) {
   const { vendor, disciplines, primary, served, openWos, contractDays, accreditationDays } = row;
   const contract = vendor.contract;
-  const accreditation = accreditationDays === undefined ? "valid" : expiryState(accreditationDays, ACCREDITATION_DUE_DAYS);
+  const accreditation = vendor.accreditationExpiry ? permitStatus(vendor.accreditationExpiry) : "valid";
   const ending = contractDays === undefined ? "valid" : expiryState(contractDays, CONTRACT_ENDING_DAYS);
 
   return (
@@ -29,11 +30,11 @@ export function VendorCard({ row }: { row: VendorRow }) {
       <div className="flex items-start gap-3">
         <Monogram name={vendor.name} />
         <div className="min-w-0 flex-1">
-          <h3 className="text-[15px] font-bold leading-snug text-ink">
+          <h2 className="text-[15px] font-bold leading-snug text-ink">
             <Link to={paths.vendor(vendor.id)} className="focus-ring rounded after:absolute after:inset-0 after:rounded-card after:content-['']">
               {vendor.name}
             </Link>
-          </h3>
+          </h2>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             <Badge>{words(vendor.kind)}</Badge>
             {accreditation !== "valid" && accreditationDays !== undefined && (

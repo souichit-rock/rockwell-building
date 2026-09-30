@@ -12,7 +12,7 @@ export function TowerSelect({ allLabel = "All towers" }: { allLabel?: string }) 
   return (
     <div className="flex flex-wrap items-center gap-3">
       <label htmlFor={id} className="sr-only">Tower</label>
-      <select id={id} value={towerId ?? ""} onChange={(e) => setTower(e.target.value || null)} className={`${selectClass} w-auto min-w-48`}>
+      <select id={id} value={towerId ?? ""} onChange={(e) => setTower(e.target.value || null)} className={`${selectClass} sm:w-auto sm:min-w-48`}>
         <option value="">{allLabel}</option>
         {towers.map((t) => (
           <option key={t.id} value={t.id}>{t.name}</option>

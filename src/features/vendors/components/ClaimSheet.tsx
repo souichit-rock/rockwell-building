@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Badge, KV } from "@/components/ui";
+import { isOverdueWo } from "@/data/selectors";
 import { fmtDate, todayISO } from "@/lib/dates";
 import { plural } from "@/lib/format";
 import { priorityTone, warrantyTone, woStatusTone } from "@/lib/status";
@@ -152,7 +153,7 @@ export function ClaimSheet({ data }: { data: ClaimData }) {
                     <td className={`${TD} whitespace-nowrap font-mono text-[12px] print:text-[10.5px]`}>{wo.number}</td>
                     <td className={`${TD} whitespace-nowrap`}>{fmtDate(wo.reportedAt)}</td>
                     <td className={TD}><Badge tone={priorityTone(wo.priority)}>{wo.priority}</Badge></td>
-                    <td className={TD}><Badge tone={woStatusTone(wo.status)}>{words(wo.status)}</Badge></td>
+                    <td className={TD}><Badge tone={woStatusTone(wo.status, isOverdueWo(wo))}>{words(wo.status)}</Badge></td>
                     <td className={TD}>{wo.title}</td>
                     <td className={`${TD} font-semibold`}>{inCover ? "Yes" : "No"}</td>
                   </tr>

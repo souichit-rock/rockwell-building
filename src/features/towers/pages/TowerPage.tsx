@@ -20,7 +20,8 @@ import { assetCountsByFloor, contactsFor, coverageModel, floorsOf, keyDocuments,
 
 export default function TowerPage() {
   const { towerId = "" } = useParams();
-  const tower = useDb((db) => db.towers[towerId]);
+  // hasOwn: "/towers/constructor" would otherwise find Object.prototype.constructor and skip the 404 card
+  const tower = useDb((db) => (Object.hasOwn(db.towers, towerId) ? db.towers[towerId] : undefined));
   if (!tower) return <NotFound what="tower" id={towerId} />;
   return <TowerOverview tower={tower} />;
 }

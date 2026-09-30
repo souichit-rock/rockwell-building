@@ -27,6 +27,8 @@ export const paths = {
   assets: (q?: {
     tower?: Id; discipline?: DisciplineCode; type?: Id; status?: AssetStatus; band?: WarrantyBand[]; crit?: Criticality;
     compliance?: ComplianceStatus; pm?: "overdue"; q?: string; brand?: Id; model?: Id; vendor?: Id;
+    /** `om: "missing"` lists only assets with no O&M manual linked (dashboard record-gap link). */
+    om?: "missing";
   }) => `/assets${qs(q)}`,
   asset: (id: Id, q?: { tab?: "overview" | "documents" | "maintenance" | "history" }) => `/assets/${e(id)}${qs(q)}`,
   qr: (tag: string) => `/a/${e(tag)}`,

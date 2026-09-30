@@ -1,6 +1,6 @@
 import { Ban, CircleCheck, Pause, Play, UserCheck, type LucideIcon } from "lucide-react";
-import { useState } from "react";
-import { useLocation, useParams } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router";
 import NotFound from "@/app/NotFound";
 import { Badge, Breadcrumb, Button, Card, Notice, PageHeader, cn } from "@/components/ui";
 import { isOverdueWo } from "@/data/selectors";
@@ -34,7 +34,7 @@ function Progress({ status }: { status: WOStatus }) {
             aria-current={current ? "step" : undefined}
             className={cn(
               "border-t-4 pt-1.5 text-[10.5px] font-extrabold uppercase tracking-[.08em]",
-              !reached ? "border-line text-muted" : current ? (status === "on-hold" ? "border-warn text-ink" : "border-gold text-ink") : "border-ok text-ink-soft",
+              !reached ? "border-line text-muted" : current ? (status === "on-hold" ? "border-warn text-ink" : "border-ink text-ink") : "border-ok text-ink-soft",
             )}
           >
             {STATUS_LABEL[step]}
@@ -78,9 +78,25 @@ export default function WorkOrderDetail() {
   const { woId } = useParams();
   const db = useDb((d) => d);
   const location = useLocation();
+  const navigate = useNavigate();
   const [dialog, setDialog] = useState<DialogTarget | null>(null);
+  // "Raised" arrives once in the navigation state: keep it for this visit, then drop it from history so reload and Back do not replay it.
+  const [createdId] = useState(() => ((location.state as { created?: boolean } | null)?.created === true ? woId : undefined));
+  useEffect(() => {
+    if ((location.state as { created?: boolean } | null)?.created) navigate(location.pathname + location.search, { replace: true, state: null });
+  }, [location, navigate]);
 
   const wo = lookup(db.workOrders, woId);
+
+  // After a transition the button that was clicked is gone (or the dialog unmounted it), so focus would fall to <body>: hand it to the status badge.
+  const statusRef = useRef<HTMLSpanElement>(null);
+  const shown = useRef<{ id: string; status: WOStatus } | undefined>(undefined);
+  useEffect(() => {
+    const prev = shown.current;
+    shown.current = wo ? { id: wo.id, status: wo.status } : undefined;
+    if (wo && prev?.id === wo.id && prev.status !== wo.status) statusRef.current?.focus();
+  });
+
   if (!wo) return <NotFound what="work order" id={woId} />;
 
   const now = Date.now();
@@ -88,7 +104,6 @@ export default function WorkOrderDetail() {
   const { tower, floor, space } = whereOf(db, wo);
   const reporter = db.teamMembers[wo.reportedById];
   const engineer = defaultEngineer(db, wo.towerId);
-  const created = (location.state as { created?: boolean } | null)?.created === true;
   const eyebrow = [tower?.name, floor?.label, space?.name].filter(Boolean).join(" · ") || "Work order";
 
   return (
@@ -108,7 +123,9 @@ export default function WorkOrderDetail() {
       >
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={woStatusTone(wo.status, overdue)} dot>{badgeText(wo.status)}</Badge>
+            <span ref={statusRef} tabIndex={-1} className="focus-ring rounded-full">
+              <Badge tone={woStatusTone(wo.status, overdue)} dot>{badgeText(wo.status)}</Badge>
+            </span>
             <Badge tone={priorityTone(wo.priority)}>{wo.priority}</Badge>
             <Badge>{KIND_LABEL[wo.kind]}</Badge>
             {overdue && <Badge tone="danger">{dueLine(wo, now)}</Badge>}
@@ -118,7 +135,7 @@ export default function WorkOrderDetail() {
       </PageHeader>
 
       <div className="mb-4 space-y-3 empty:hidden">
-        {created && <Notice tone="ok">Work order {wo.number} raised. It is on the board now.</Notice>}
+        {createdId === wo.id && <Notice tone="ok">Work order {wo.number} raised. It is on the board now.</Notice>}
         {wo.status === "done" && wo.completedAt && <Notice tone="ok">Completed {fmtDateTime(wo.completedAt)}.</Notice>}
         {wo.status === "cancelled" && <Notice tone="warn">This work order was cancelled and is closed.</Notice>}
       </div>
@@ -133,7 +150,7 @@ export default function WorkOrderDetail() {
             )}
             {reporter && <p className="type-small mt-3 text-muted">Reported by {reporter.name}, {reporter.role}.</p>}
           </Card>
-          <ActivityCard wo={wo} actor={engineer?.name} />
+          <ActivityCard key={wo.id} wo={wo} actor={engineer?.name} />
         </div>
         <aside className="min-w-0 space-y-4">
           <ContactCard db={db} wo={wo} />

@@ -8,7 +8,7 @@ import { TierBadge } from "./TierBadge";
 
 /** One card per brand. The title link is stretched over the card; the installed count is its own link above it (never a link inside a link). */
 export function BrandCard({ row, towerId }: { row: BrandRow; towerId: Id | null }) {
-  const { brand, installed, models, best } = row;
+  const { brand, disciplineNames, installed, models, best } = row;
   return (
     <article className="relative flex min-w-0 flex-col gap-3 rounded-card border border-line bg-surface p-4 transition-colors duration-150 focus-within:border-ink-soft hover:border-line-strong">
       <div className="flex items-start gap-3">
@@ -24,8 +24,8 @@ export function BrandCard({ row, towerId }: { row: BrandRow; towerId: Id | null 
         <TierBadge tier={best} />
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {brand.disciplineIds.map((d) => (
-          <Badge key={d} tone="neutral">{d}</Badge>
+        {disciplineNames.map((name) => (
+          <Badge key={name} tone="neutral">{name}</Badge>
         ))}
       </div>
       <div className="mt-auto flex items-center justify-between gap-3 border-t border-line pt-3 text-xs text-ink-soft">

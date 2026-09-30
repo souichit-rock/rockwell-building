@@ -1,6 +1,6 @@
-import { MapPin, Phone } from "lucide-react";
+import { History, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router";
-import { Badge, Button, Card, KV, Notice, Timeline, cn } from "@/components/ui";
+import { Badge, Button, Card, EmptyState, KV, Notice, Timeline, cn } from "@/components/ui";
 import { FloorPlanSvg } from "@/components/plan/FloorPlanSvg";
 import { fmtDate } from "@/lib/dates";
 import { paths } from "@/lib/paths";
@@ -48,7 +48,7 @@ function ActivityCard({ p, onTab }: { p: Passport; onTab: (tab: TabKey) => void 
       className="print:hidden"
       actions={p.history.length > 4 ? <Button variant="ghost" size="sm" onClick={() => onTab("history")}>View all {p.history.length}</Button> : undefined}
     >
-      {p.history.length > 0 ? <Timeline items={timelineOf(p.history.slice(0, 4))} /> : <p className="type-small text-muted">No work orders or inspections recorded for this asset yet.</p>}
+      {p.history.length > 0 ? <Timeline items={timelineOf(p.history.slice(0, 4))} /> : <EmptyState icon={History} title="No activity yet" body="No work order or inspection has been recorded against this asset." className="py-8" />}
     </Card>
   );
 }
@@ -56,27 +56,30 @@ function ActivityCard({ p, onTab }: { p: Passport; onTab: (tab: TabKey) => void 
 function SpecsCard({ p }: { p: Passport }) {
   const { asset, type, model, brand, parent, installer, serviceVendor } = p;
   const vendorLink = (v: typeof installer) => (v ? <Link to={paths.vendor(v.id)} className={LINK}>{v.name}</Link> : "—");
+  const head = [
+    { k: "Type", v: <Link to={paths.catalogue({ type: type.id })} className={LINK}>{type.name}</Link> },
+    { k: "Brand", v: brand ? <Link to={paths.brand(brand.id)} className={LINK}>{brand.name}</Link> : "—" },
+    { k: "Model", v: model ? <Link to={paths.model(model.id)} className={LINK}>{model.modelNo}</Link> : "—", mono: true },
+  ];
+  const tail = [
+    { k: "Rating", v: asset.rating || "—" },
+    { k: "Serial", v: asset.serial, mono: true },
+    { k: "Installed", v: fmtDate(asset.installDate) },
+    { k: "Commissioned", v: fmtDate(asset.commissionDate) },
+    { k: "Criticality", v: asset.criticality },
+    { k: "Condition", v: <Badge tone={conditionTone(asset.condition)}>{asset.condition}</Badge> },
+    { k: "Status", v: <Badge tone={assetStatusTone(asset.status)}>{words(asset.status)}</Badge> },
+    { k: "Parent asset", v: parent ? <Link to={paths.asset(parent.id)} className={cn(LINK, "font-mono text-[12px]")}>{parent.tag}</Link> : "—" },
+    { k: "Installer", v: vendorLink(installer) },
+    { k: "Service vendor", v: vendorLink(serviceVendor) },
+    ...(asset.notes ? [{ k: "Notes", v: asset.notes }] : []),
+  ];
+  // a model spec named like a fixed row ("Rating", "Type") would repeat the label and the KV row key, so it reads "Model rating" instead
+  const taken = new Set([...head, ...tail].map((i) => i.k));
+  const specs = Object.entries(model?.specs ?? {}).map(([k, v]) => ({ k: taken.has(k) ? `Model ${k.toLowerCase()}` : k, v }));
   return (
     <Card title="Specifications" className={PRINT_CARD}>
-      <KV
-        items={[
-          { k: "Type", v: <Link to={paths.catalogue({ type: type.id })} className={LINK}>{type.name}</Link> },
-          { k: "Brand", v: brand ? <Link to={paths.brand(brand.id)} className={LINK}>{brand.name}</Link> : "—" },
-          { k: "Model", v: model ? <Link to={paths.model(model.id)} className={LINK}>{model.modelNo}</Link> : "—", mono: true },
-          ...Object.entries(model?.specs ?? {}).map(([k, v]) => ({ k, v })),
-          { k: "Rating", v: asset.rating || "—" },
-          { k: "Serial", v: asset.serial, mono: true },
-          { k: "Installed", v: fmtDate(asset.installDate) },
-          { k: "Commissioned", v: fmtDate(asset.commissionDate) },
-          { k: "Criticality", v: asset.criticality },
-          { k: "Condition", v: <Badge tone={conditionTone(asset.condition)}>{asset.condition}</Badge> },
-          { k: "Status", v: <Badge tone={assetStatusTone(asset.status)}>{words(asset.status)}</Badge> },
-          { k: "Parent asset", v: parent ? <Link to={paths.asset(parent.id)} className={cn(LINK, "font-mono text-[12px]")}>{parent.tag}</Link> : "—" },
-          { k: "Installer", v: vendorLink(installer) },
-          { k: "Service vendor", v: vendorLink(serviceVendor) },
-          ...(asset.notes ? [{ k: "Notes", v: asset.notes }] : []),
-        ]}
-      />
+      <KV items={[...head, ...specs, ...tail]} />
     </Card>
   );
 }

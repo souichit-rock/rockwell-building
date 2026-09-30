@@ -13,7 +13,7 @@ import { EditAssetModal } from "../components/EditAssetModal";
 import { HistoryTab } from "../components/HistoryTab";
 import { MaintenanceTab } from "../components/MaintenanceTab";
 import { OverviewTab } from "../components/OverviewTab";
-import { TAB_KEYS, passportOf, sequenceOf, words, type TabKey } from "../lib";
+import { TAB_KEYS, own, passportOf, sequenceOf, words, type TabKey } from "../lib";
 
 function PassportView({ asset }: { asset: Asset }) {
   const db = useDb((d) => d);
@@ -121,6 +121,6 @@ function PassportView({ asset }: { asset: Asset }) {
 
 export default function AssetPassport() {
   const { assetId = "" } = useParams();
-  const asset = useDb((db) => db.assets[assetId]);
-  return asset ? <PassportView asset={asset} /> : <NotFound what="asset" id={assetId} />;
+  const asset = useDb((db) => own(db.assets, assetId));
+  return asset ? <PassportView key={asset.id} asset={asset} /> : <NotFound what="asset" id={assetId} />;
 }

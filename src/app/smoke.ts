@@ -79,6 +79,10 @@ export const SMOKE_NOT_FOUND = [
   "/maintenance/zzz",
   "/inspections/zzz",
   "/vendors/zzz",
+  // Object.prototype keys must hit the same 404 card (plain-object lookups without hasOwn crashed here once)
+  "/towers/constructor",
+  "/vendors/constructor",
+  "/assets/constructor",
 ];
 
 export const SMOKE_URLS: string[] = [...FOUND, ...SMOKE_NOT_FOUND];

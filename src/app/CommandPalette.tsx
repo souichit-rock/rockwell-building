@@ -125,7 +125,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           }}
           onKeyDown={onKeyDown}
           placeholder="Search towers, assets, tags, documents, work orders…"
-          className="h-14 min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-muted"
+          className="h-14 min-w-0 flex-1 bg-transparent text-[16px] text-ink outline-none placeholder:text-muted sm:text-[15px]"
         />
         <kbd className="hidden shrink-0 rounded-md border border-line-strong px-1.5 py-0.5 font-sans text-[10px] font-bold uppercase tracking-[.08em] text-muted sm:block">Esc</kbd>
       </div>

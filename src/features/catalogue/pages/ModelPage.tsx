@@ -1,6 +1,7 @@
 import { Boxes, FileText, Printer, Ruler } from "lucide-react";
 import { Link, useParams } from "react-router";
 import NotFound from "@/app/NotFound";
+import { useTowerScope } from "@/app/useTowerScope";
 import { Badge, Breadcrumb, Button, Card, DocumentCard, EmptyState, KV, Notice, PageHeader, StatTile, cn } from "@/components/ui";
 import { docsFor } from "@/data/selectors";
 import { useDb } from "@/data/store";
@@ -20,6 +21,9 @@ const monoLink = "focus-ring rounded font-mono font-bold text-ink hover:underlin
 export default function ModelPage() {
   const { modelId } = useParams();
   const db = useDb((d) => d);
+  const { setTowerId } = useTowerScope();
+  // This page counts across every tower; the registry falls back to the rail's tower scope, so a portfolio-wide link clears it.
+  const allTowers = () => setTowerId(null);
   const model = lookup(db.models, modelId);
   if (!model) return <NotFound what="model" id={modelId} />;
 
@@ -59,7 +63,7 @@ export default function ModelPage() {
           ),
         }]
       : []),
-    { k: "Installed", v: assets.length > 0 ? <Link to={registry} className={inlineLink}>{plural(assets.length, "asset")}</Link> : "None" },
+    { k: "Installed", v: assets.length > 0 ? <Link to={registry} onClick={allTowers} className={inlineLink}>{plural(assets.length, "asset")}</Link> : "None" },
     { k: "Towers", v: groups.length > 0 ? groups.map((g) => g.tower.code).join(", ") : "—" },
   ];
 
@@ -97,7 +101,7 @@ export default function ModelPage() {
               Print
             </Button>
             {assets.length > 0 && (
-              <Button to={registry} variant="primary" className="print:hidden">
+              <Button to={registry} onClick={allTowers} variant="primary" className="print:hidden">
                 <Boxes aria-hidden="true" className="size-4" strokeWidth={2} />
                 View {plural(assets.length, "asset")}
               </Button>
@@ -138,28 +142,37 @@ export default function ModelPage() {
             <>
               <Card title="Warranty spread" className="print:p-4">
                 <div className="grid grid-cols-3 gap-3">
-                  {spread.buckets.map((b) => (
-                    <Link
-                      key={b.key}
-                      to={paths.assets({ model: model.id, band: b.bands })}
-                      aria-label={`${b.count} ${b.label.toLowerCase()}, open in registry`}
-                      className="focus-ring rounded-card transition-opacity duration-150 hover:opacity-80"
-                    >
+                  {spread.buckets.map((b) => {
+                    const tile = (
                       <StatTile
                         label={b.key === "soon" ? "≤ 90 d" : b.label}
                         value={fmtNumber(b.count)}
                         tone={b.key === "expired" && b.count > 0 ? "hot" : "default"}
                         className="h-full"
                       />
-                    </Link>
-                  ))}
+                    );
+                    // an empty bucket is not a link: it would open a registry with no rows
+                    return b.count > 0 ? (
+                      <Link
+                        key={b.key}
+                        to={paths.assets({ model: model.id, band: b.bands })}
+                        onClick={allTowers}
+                        aria-label={`${b.count} ${b.key === "soon" ? "ending within 90 days" : b.label.toLowerCase()}, open in registry`}
+                        className="focus-ring rounded-card transition-opacity duration-150 hover:opacity-80"
+                      >
+                        {tile}
+                      </Link>
+                    ) : (
+                      <div key={b.key}>{tile}</div>
+                    );
+                  })}
                 </div>
                 <div className="mt-4">
                   <WarrantySpreadBar buckets={spread.buckets} none={spread.none} />
                 </div>
                 {spread.none > 0 && (
                   <p className="type-small mt-3 text-muted">
-                    <Link to={paths.assets({ model: model.id, band: ["none"] })} className="focus-ring rounded font-bold text-ink hover:underline">
+                    <Link to={paths.assets({ model: model.id, band: ["none"] })} onClick={allTowers} className="focus-ring rounded font-bold text-ink hover:underline">
                       {plural(spread.none, "asset")}
                     </Link>{" "}
                     with no warranty on file.
@@ -167,7 +180,7 @@ export default function ModelPage() {
                 )}
               </Card>
 
-              <Card title="Installed by tower" className="print:p-4" actions={<Button to={registry} variant="ghost" size="sm" className="print:hidden">Open in registry</Button>}>
+              <Card title="Installed by tower" className="print:p-4" actions={<Button to={registry} onClick={allTowers} variant="ghost" size="sm" className="print:hidden">Open in registry</Button>}>
                 <WhereUsedBars rows={perTower} hrefFor={(towerId) => paths.assets({ model: model.id, tower: towerId })} />
               </Card>
             </>

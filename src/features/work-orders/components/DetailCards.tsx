@@ -105,6 +105,7 @@ export function PlanCard({ db, wo }: { db: Db; wo: WorkOrder }) {
       </Card>
     );
   }
+  const due = dueStatus(plan.nextDue);
   return (
     <Card title="Preventive plan">
       <p className="font-bold text-ink">
@@ -115,7 +116,7 @@ export function PlanCard({ db, wo }: { db: Db; wo: WorkOrder }) {
         items={[
           { k: "Frequency", v: badgeText(plan.frequency).replace(/^./, (c) => c.toUpperCase()) },
           { k: "Last done", v: fmtDate(plan.lastDone) },
-          { k: "Next due", v: <span className="inline-flex flex-wrap items-center gap-2">{fmtDate(plan.nextDue)}<Badge tone={dueTone(dueStatus(plan.nextDue))}>{dueStatus(plan.nextDue)}</Badge></span> },
+          { k: "Next due", v: <span className="inline-flex flex-wrap items-center gap-2">{fmtDate(plan.nextDue)}<Badge tone={dueTone(due)}>{badgeText(due)}</Badge></span> },
         ]}
       />
       <div className="mt-4">

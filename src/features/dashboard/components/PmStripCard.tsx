@@ -20,6 +20,8 @@ export function PmStripCard({ strip, kpis }: { strip: StripDay[]; kpis: Portfoli
   const width = strip.length * STEP + PAD * 2 - (STEP - BAR);
   const lines = Array.from({ length: Math.min(max, 5) }, (_, i) => Math.round(((i + 1) / Math.min(max, 5)) * max));
   const nothingDue = strip.every((d) => d.count === 0);
+  const todayDue = (strip[0]?.count ?? 0) > 0;
+  const laterDue = strip.slice(1).some((d) => d.count > 0);
   return (
     <Card title="PM due, next 14 days" actions={<Button to={paths.maintenance({ view: "calendar" })} size="sm">Schedule</Button>}>
       {nothingDue ? (
@@ -44,9 +46,9 @@ export function PmStripCard({ strip, kpis }: { strip: StripDay[]; kpis: Portfoli
                 <rect x={x - (STEP - BAR) / 2} y={TOP - 12} width={STEP} height={PLOT + 36} fill="transparent" />
                 {d.count > 0 && <rect x={x} y={BASE - h} width={BAR} height={h} rx="3" className={i === 0 ? "fill-gold" : "fill-ink"} />}
                 {d.count > 0 && (
-                  <text x={x + BAR / 2} y={BASE - h - 4} textAnchor="middle" className="fill-ink-soft text-[10px] font-bold">{d.count}</text>
+                  <text x={x + BAR / 2} y={BASE - h - 4} textAnchor="middle" className="fill-ink-soft text-[11px] font-bold">{d.count}</text>
                 )}
-                <text x={x + BAR / 2} y={BASE + 15} textAnchor="middle" className={i === 0 ? "fill-ink text-[10px] font-extrabold" : "fill-muted text-[10px]"}>
+                <text x={x + BAR / 2} y={BASE + 15} textAnchor="middle" className={i === 0 ? "fill-ink text-[11px] font-extrabold" : "fill-muted text-[11px]"}>
                   {d.day}
                 </text>
               </g>
@@ -58,11 +60,20 @@ export function PmStripCard({ strip, kpis }: { strip: StripDay[]; kpis: Portfoli
         {nothingDue ? (
           <span />
         ) : (
-          <span className="inline-flex items-center gap-2">
-            <span aria-hidden="true" className="size-2.5 rounded-sm bg-gold" />
-            Today
-            <span aria-hidden="true" className="ml-2 size-2.5 rounded-sm bg-ink" />
-            Later
+          // a swatch only for a colour that is actually drawn
+          <span className="inline-flex items-center gap-4">
+            {todayDue && (
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true" className="size-2.5 rounded-sm bg-gold" />
+                Today
+              </span>
+            )}
+            {laterDue && (
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true" className="size-2.5 rounded-sm bg-ink" />
+                Later
+              </span>
+            )}
           </span>
         )}
         <span>

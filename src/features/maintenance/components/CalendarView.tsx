@@ -11,6 +11,8 @@ import { calendarCells, dueNote, FREQUENCY_LABEL, monthLabel, shiftMonth, words,
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const STATUSES: DueStatus[] = ["overdue", "due", "on-track"];
+// phone counters carry a letter so status never rests on colour alone
+const LETTER: Record<DueStatus, string> = { overdue: "O", due: "D", "on-track": "T" };
 // chip fills follow the badge tones; the tone itself always comes from dueTone
 const FILL: Partial<Record<BadgeTone, string>> = { ok: "bg-ok-soft text-ok-deep", warn: "bg-warn-soft text-warn-deep", danger: "bg-danger-soft text-danger-deep" };
 const fill = (status: DueStatus) => FILL[dueTone(status)] ?? "bg-surface-2 text-ink-soft";
@@ -73,6 +75,7 @@ export function CalendarView({ rows, month: monthParam, onMonth }: {
           {days.map((date) => {
             const items = cells.get(date) ?? [];
             const carried = items.filter((i) => i.carried).length;
+            const counts = STATUSES.map((s) => [s, items.filter((i) => i.row.status === s).length] as const).filter(([, n]) => n > 0);
             const shown = items.slice(0, 3);
             const inMonth = date.startsWith(month);
             const isToday = date === today;
@@ -88,20 +91,20 @@ export function CalendarView({ rows, month: monthParam, onMonth }: {
                 <button
                   type="button"
                   aria-pressed={date === selected}
-                  aria-label={`${fmtDate(date)}, ${plural(items.length, "plan")}${carried > 0 ? `, ${carried} overdue carried` : ""}`}
+                  aria-label={`${fmtDate(date)}, ${plural(items.length, "plan")}${counts.length > 0 ? ` (${counts.map(([s, n]) => `${n} ${words(s)}`).join(", ")})` : ""}${carried > 0 ? `, ${carried} overdue carried` : ""}`}
                   onClick={() => setPicked(date)}
                   className="focus-ring flex w-full items-start justify-between gap-1 rounded text-left after:absolute after:inset-0 after:content-['']"
                 >
                   <span
                     className={cn(
-                      "grid size-6 place-items-center rounded-full text-[12px] font-bold tabular-nums",
+                      "grid size-6 shrink-0 place-items-center rounded-full text-[12px] font-bold tabular-nums",
                       isToday ? "bg-navy text-nav-text" : inMonth ? "text-ink" : "text-muted",
                     )}
                   >
                     {Number(date.slice(8))}
                   </span>
                   {carried > 0 && (
-                    <Badge tone="danger">
+                    <Badge tone="danger" className="max-sm:px-1">
                       {carried}
                       <span className="hidden sm:inline">overdue</span>
                     </Badge>
@@ -137,20 +140,20 @@ export function CalendarView({ rows, month: monthParam, onMonth }: {
                 </ul>
 
                 <div className="flex flex-wrap gap-0.5 sm:hidden" aria-hidden="true">
-                  {STATUSES.map((s) => {
-                    const n = items.filter((i) => i.row.status === s).length;
-                    return n > 0 ? (
-                      <span key={s} className={cn("min-w-4 rounded px-1 text-center text-[10px] font-extrabold tabular-nums leading-4", fill(s))}>
-                        {n}
-                      </span>
-                    ) : null;
-                  })}
+                  {counts.map(([s, n]) => (
+                    <span key={s} className={cn("min-w-4 rounded px-1 text-center text-[10px] font-extrabold tabular-nums leading-4", fill(s))}>
+                      {LETTER[s]}{n}
+                    </span>
+                  ))}
                 </div>
               </div>
             );
           })}
         </div>
       </div>
+      <p className="type-small mt-2 text-muted sm:hidden" aria-hidden="true">
+        {STATUSES.map((s) => `${LETTER[s]} ${words(s)}`).join(" · ")}
+      </p>
 
       <Card
         tight

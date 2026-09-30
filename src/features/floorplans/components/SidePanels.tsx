@@ -34,7 +34,7 @@ export function SpaceList({ spaces, counts, selectedId, onSelect }: {
                     <span className="block truncate text-[13px] font-semibold text-ink">{s.name}</span>
                     <span className="block truncate font-mono text-[11px] text-muted">{s.code} · {kindLabel(s.kind)}</span>
                   </span>
-                  {n > 0 ? <Badge tone="neutral">{n}</Badge> : <span aria-label="no assets" className="text-xs text-muted">—</span>}
+                  {n > 0 ? <Badge tone="neutral">{n}</Badge> : <span className="text-xs text-muted"><span aria-hidden="true">—</span><span className="sr-only">No assets</span></span>}
                 </button>
               </li>
             );

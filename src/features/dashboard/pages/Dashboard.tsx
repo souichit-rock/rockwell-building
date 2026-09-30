@@ -4,7 +4,6 @@ import { useTowerScope } from "@/app/useTowerScope";
 import { Chip } from "@/components/ui";
 import { useDb } from "@/data/store";
 import { todayISO } from "@/lib/dates";
-import { paths } from "@/lib/paths";
 import { AttentionCard } from "../components/AttentionCard";
 import { GapsCard } from "../components/GapsCard";
 import { Hero } from "../components/Hero";
@@ -40,7 +39,6 @@ export default function Dashboard() {
         towers={data.cards.map((c) => c.tower)}
         assets={data.kpis.assetsTotal}
         today={today}
-        tourHref={data.tour[1]?.to ?? paths.towers()}
       />
       <KpiRow kpis={data.kpis} warranties30={data.warranties30} />
       <TowerCards cards={data.cards} />

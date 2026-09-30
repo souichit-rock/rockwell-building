@@ -73,7 +73,8 @@ export default function SchedulePage() {
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
             <div role="group" aria-label="View" className="flex gap-2">
-              <Chip label="List" active={view === "list"} onClick={() => set({ view: null })} />
+              {/* the calendar stores the current month as an absent ?month=; the list reads absent as "every month", so carry the visible month over */}
+              <Chip label="List" active={view === "list"} onClick={() => set({ view: null, month: view === "calendar" ? visibleMonth : month })} />
               <Chip label="Calendar" active={view === "calendar"} onClick={() => set({ view: "calendar" })} />
             </div>
             <FilterSelect

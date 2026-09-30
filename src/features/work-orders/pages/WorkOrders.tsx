@@ -2,12 +2,12 @@ import { ClipboardList, Plus } from "lucide-react";
 import { Button, Chip, EmptyState, PageHeader, StatTile, Tabs } from "@/components/ui";
 import { isOverdueWo } from "@/data/selectors";
 import { useDb } from "@/data/store";
-import { fmtNumber } from "@/lib/format";
+import { fmtNumber, plural } from "@/lib/format";
 import { paths } from "@/lib/paths";
 import { Board } from "../components/Board";
 import { FilterBar } from "../components/FilterBar";
 import { ListView } from "../components/ListView";
-import { filterWorkOrders, isFinal, sortWorkOrders, STATUSES, useWoFilters } from "../lib";
+import { filterWorkOrders, isFinal, lookup, sortWorkOrders, STATUSES, useWoFilters } from "../lib";
 
 /** /work-orders: Board / List of the same filtered set, so counts agree between the two views. */
 export default function WorkOrders() {
@@ -24,7 +24,7 @@ export default function WorkOrders() {
   const cancelledCount = filters.status ? 0 : filterWorkOrders(db, { ...filters, status: "cancelled" }).length;
   const columns = filters.status ? [filters.status] : filters.cancelled ? STATUSES : STATUSES.filter((s) => s !== "cancelled");
 
-  const asset = filters.assetId ? db.assets[filters.assetId] : undefined;
+  const asset = lookup(db.assets, filters.assetId);
   const newLink = paths.newWorkOrder({
     ...(filters.assetId ? { assetId: filters.assetId } : {}),
     ...(filters.tower ? { towerId: filters.tower } : {}),
@@ -53,7 +53,7 @@ export default function WorkOrders() {
         />
       </PageHeader>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatTile label="Active" value={fmtNumber(active.length)} delta={`of ${fmtNumber(rows.length)} shown`} />
           <StatTile label="Overdue" value={fmtNumber(overdue)} tone={overdue > 0 ? "hot" : "default"} delta="past their due time" />
@@ -61,20 +61,24 @@ export default function WorkOrders() {
           <StatTile label="Done" value={fmtNumber(done)} delta="closed out" />
         </div>
 
-        <FilterBar db={db} filters={filters} update={update} setTower={setTower} />
+        <div className="space-y-3">
+          <FilterBar db={db} filters={filters} update={update} setTower={setTower} />
 
-        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-          {scopeTower && <Chip active label={`Scoped to ${db.towers[scopeTower]?.name ?? scopeTower} ×`} onClick={clearScope} />}
-          {filters.assetId && <Chip active label={`Asset ${asset?.tag ?? filters.assetId} ×`} onClick={() => update({ assetId: "" })} />}
-          {!filters.status && (
-            <Chip
-              active={filters.cancelled}
-              label="Cancelled"
-              count={cancelledCount}
-              onClick={() => update({ cancelled: filters.cancelled ? "" : "1" })}
-            />
-          )}
-          {hasFilters && <Chip active={false} label="Clear filters" onClick={clear} />}
+          <div className="flex flex-wrap items-center gap-2">
+            {scopeTower && <Chip active label={`Scoped to ${db.towers[scopeTower]?.name ?? scopeTower} ×`} onClick={clearScope} />}
+            {filters.assetId && <Chip active label={`Asset ${asset?.tag ?? filters.assetId} ×`} onClick={() => update({ assetId: "" })} />}
+            {!filters.status && (
+              <Chip
+                active={filters.cancelled}
+                label="Cancelled"
+                count={cancelledCount}
+                onClick={() => update({ cancelled: filters.cancelled ? "" : "1" })}
+              />
+            )}
+            {hasFilters && <Button variant="ghost" size="sm" onClick={clear}>Clear filters</Button>}
+            {/* the list view carries its own count beside Export CSV */}
+            {filters.view === "board" && <p className="type-small ml-auto text-muted" aria-live="polite">{plural(rows.length, "work order")}</p>}
+          </div>
         </div>
 
         {rows.length === 0 ? (
@@ -83,8 +87,8 @@ export default function WorkOrders() {
             title="No work orders"
             body={hasFilters || scopeTower ? "Nothing matches these filters." : "Nothing has been raised yet."}
             action={
-              hasFilters ? (
-                <Button variant="ghost" size="sm" onClick={clear}>Clear filters</Button>
+              hasFilters || scopeTower ? (
+                <Button variant="ghost" size="sm" onClick={() => { clear(); clearScope(); }}>Clear filters</Button>
               ) : (
                 <Button variant="ghost" size="sm" to={newLink}>New work order</Button>
               )

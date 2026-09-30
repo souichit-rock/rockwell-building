@@ -3,7 +3,7 @@ import { Button, Field, KV, Modal, inputClass } from "@/components/ui";
 import { upsert, useDb } from "@/data/store";
 import type { Permit } from "@/data/types";
 import { addDays, daysUntil, fmtDate, todayISO } from "@/lib/dates";
-import { PERMIT_LABEL, focusFirstInvalid, hasExpiry, nextRev } from "../lib";
+import { PERMIT_LABEL, focusFirstInvalid, hasExpiry, isISODate, nextRev } from "../lib";
 
 interface Values { number: string; issued: string; expires: string }
 
@@ -30,9 +30,9 @@ function RenewForm({ formId, permit, onSaved }: { formId: string; permit: Permit
     const next: Partial<Record<keyof Values, string>> = {};
     if (!number) next.number = "Enter the new permit number.";
     else if (permits.some((p) => p.id !== permit.id && p.number.toLowerCase() === number.toLowerCase())) next.number = "Another permit already has that number.";
-    if (!v.issued) next.issued = "Pick the issue date.";
-    if (!v.expires) next.expires = "Pick the expiry date.";
-    else if (v.issued && v.expires <= v.issued) next.expires = "Expiry must be after the issue date.";
+    if (!isISODate(v.issued)) next.issued = "Pick a valid issue date.";
+    if (!isISODate(v.expires)) next.expires = "Pick a valid expiry date.";
+    else if (!next.issued && v.expires <= v.issued) next.expires = "Expiry must be after the issue date.";
     setErrors(next);
     if (Object.keys(next).length > 0) return focusFirstInvalid(formRef.current);
 

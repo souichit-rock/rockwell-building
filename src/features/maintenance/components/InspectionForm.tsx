@@ -46,6 +46,8 @@ export function InspectionForm({ initialAssetId, initialPlanId }: { initialAsset
   const [errors, setErrors] = useState<Errors>({});
   const keys = useRef(0);
   const summary = useRef<HTMLDivElement>(null);
+  const saving = useRef(false);
+  const [busy, setBusy] = useState(false);
 
   const asset = pick(db.assets, assetId);
   const tower = pick(db.towers, asset?.towerId);
@@ -112,6 +114,11 @@ export function InspectionForm({ initialAssetId, initialPlanId }: { initialAsset
         next.readings = "Give every reading a label and a numeric value, or remove the row.";
         break;
       }
+      // labels key plain-object series elsewhere: "constructor" or "__proto__" would crash every page that reads this asset's readings
+      if (label in {}) {
+        next.readings = `"${label}" is a reserved name. Choose a different reading label.`;
+        break;
+      }
       readings.push({ label, value, unit: d.unit.trim() });
     }
     const text = findings.trim();
@@ -121,6 +128,11 @@ export function InspectionForm({ initialAssetId, initialPlanId }: { initialAsset
       requestAnimationFrame(() => summary.current?.focus());
       return;
     }
+
+    // navigate() waits on the lazy inspection chunk, so the form stays tappable: one save per mount
+    if (saving.current) return;
+    saving.current = true;
+    setBusy(true);
 
     const now = Date.now();
     let workOrderId: Id | undefined;
@@ -360,7 +372,7 @@ export function InspectionForm({ initialAssetId, initialPlanId }: { initialAsset
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button to={cancelTo} variant="ghost" className="w-full sm:w-auto">Cancel</Button>
-        <Button type="submit" variant="primary" className="w-full sm:w-auto">Save inspection</Button>
+        <Button type="submit" variant="primary" disabled={busy} className="w-full sm:w-auto">{busy ? "Saving…" : "Save inspection"}</Button>
       </div>
     </form>
   );

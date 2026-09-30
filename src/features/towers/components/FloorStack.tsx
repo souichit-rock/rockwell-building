@@ -100,7 +100,8 @@ export function FloorStack({ db, towerId, floors, counts }: { db: Db; towerId: I
               <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5" aria-label="Assets on this floor by discipline">
                 {plan.legend.map(({ d, n }) => (
                   <li key={d.id} className="flex items-center gap-1.5 text-xs font-semibold text-ink-soft">
-                    <span aria-hidden="true" className={cn("size-2.5 rounded-full", DOT[d.tone])} />
+                    {/* white ring = the pin's white stroke; without it the navy Electrical dot vanishes into the dark card */}
+                    <span aria-hidden="true" className={cn("size-2.5 rounded-full ring-1 ring-white", DOT[d.tone])} />
                     {d.name}
                     <span className="tabular-nums text-muted">{n}</span>
                   </li>

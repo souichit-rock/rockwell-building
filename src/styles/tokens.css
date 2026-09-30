@@ -10,7 +10,7 @@
   /* ink */
   --c-text: 19 42 78;             /* navy ink */
   --c-text-soft: 71 90 122;
-  --c-muted: 105 122 153;
+  --c-muted: 88 104 134;          /* AA for 10-13 px text: 5.6:1 white, 5.1 paper, 5.0 surface-2, 4.6 on the soft status tints */
 
   /* lines */
   --c-border: 221 229 240;

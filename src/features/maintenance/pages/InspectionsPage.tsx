@@ -18,13 +18,16 @@ import {
 export default function InspectionsPage() {
   const db = useDb((d) => d);
   const { get, set } = useQueryParams();
-  const { towerId, queryTower, scopedTower, setTower, clearScope } = useTowerFilter();
+  const { towerId: filterTower, queryTower, scopedTower: scoped, setTower, clearScope } = useTowerFilter();
   const today = todayISO();
 
   const type = INSPECTION_TYPES.find((t) => t === get("type"));
   const result = RESULTS.find((r) => r === get("result"));
   const assetId = get("assetId");
   const asset = pick(db.assets, assetId);
+  // ?assetId= is link-only and can name an asset outside the rail scope, so it wins over the ambient scope (an explicit ?tower= still applies)
+  const towerId = assetId && scoped ? undefined : filterTower;
+  const scopedTower = assetId ? undefined : scoped;
 
   const all = useMemo(() => inspectionRows(db), [db]);
   const towers = Object.values(db.towers).sort((a, b) => a.name.localeCompare(b.name));

@@ -196,19 +196,28 @@ export function recordGaps(db: Db, towerId?: Id): RecordGap[] {
     if (missing > 0) {
       gaps.push({
         kind: "missing-asbuilt", towerId: t.id, count: missing, title: `${plural(missing, "floor-discipline pair")} without a current as-built`,
-        href: paths.documents({ tower: t.id, type: "as-built", current: 1 }),
+        // The tower page's coverage matrix marks exactly these pairs. A documents link cannot: "Current only" would list the sheets that are
+        // NOT the problem, and the missing pair has no current sheet to list.
+        href: paths.tower(t.id),
       });
     }
     const assets = assetsIn(db, { towerId: t.id });
-    const noOm = assets.filter((a) => a.criticality === "A" && !docsFor(db, "asset", a.id).some((d) => d.type === "om-manual")).length;
+    const critical = assets.filter((a) => a.criticality === "A");
+    const noOm = critical.filter((a) => !docsFor(db, "asset", a.id).some((d) => d.type === "om-manual")).length;
     if (noOm > 0) {
-      gaps.push({ kind: "no-om", towerId: t.id, count: noOm, title: `${plural(noOm, "critical asset")} without an O&M manual`, href: paths.assets({ tower: t.id, crit: "A" }) });
+      // The registry has no filter for "no O&M manual" yet, so crit=A lists every critical asset; the "of N" keeps the count on the card
+      // the registry reads `om=missing`, so the link lists exactly the offenders.
+      gaps.push({
+        kind: "no-om", towerId: t.id, count: noOm, title: `${noOm} of ${plural(critical.length, "critical asset")} without an O&M manual`,
+        href: paths.assets({ tower: t.id, crit: "A", om: "missing" }),
+      });
     }
     const stale = assets.filter((a) => governingSheet(db, a.id)?.stale).length;
     if (stale > 0) {
       gaps.push({
         kind: "stale-sheet", towerId: t.id, count: stale, title: `${plural(stale, "asset")} documented only on a superseded as-built`,
-        href: paths.documents({ tower: t.id, status: "superseded" }),
+        // governingSheet only ever looks at as-built sheets, so the superseded as-builts are the closest list the register can show
+        href: paths.documents({ tower: t.id, type: "as-built", status: "superseded" }),
       });
     }
   }
@@ -331,7 +340,7 @@ export function serviceHistory(db: Db, assetId: Id): HistoryItem[] {
 }
 
 export function readingsSeries(db: Db, assetId: Id): Record<string, { date: ISODate; value: number; unit: string }[]> {
-  const out: Record<string, { date: ISODate; value: number; unit: string }[]> = {};
+  const out: Record<string, { date: ISODate; value: number; unit: string }[]> = Object.create(null);
   const logs = Object.values(db.inspections).filter((i) => i.assetId === assetId).sort((a, b) => cmp(a.date, b.date));
   for (const log of logs) for (const r of log.readings) (out[r.label] ??= []).push({ date: log.date, value: r.value, unit: r.unit });
   return out;
@@ -415,7 +424,7 @@ export function attentionItems(db: Db, towerId?: Id, today: ISODate = todayISO()
     items.push({
       kind: "permit", towerId: p.towerId, title: `${PERMIT_LABEL[p.type]} permit ${p.number}`,
       subtitle: `${towerName(p.towerId)} · ${s === "expired" ? `expired ${plural(-d, "day")} ago` : d === 0 ? "expires today" : `expires in ${plural(d, "day")}`}`,
-      href: paths.permits({ tower: p.towerId }), tone: s === "expired" ? "danger" : "warn", at: p.expiryDate,
+      href: paths.permits({ tower: p.towerId, type: p.type }), tone: s === "expired" ? "danger" : "warn", at: p.expiryDate,
     });
   }
   for (const w of Object.values(db.warranties)) {

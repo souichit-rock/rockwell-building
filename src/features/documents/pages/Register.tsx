@@ -13,7 +13,7 @@ import { DocsHeader } from "../components/DocsHeader";
 import { AddDocumentModal } from "../components/DocumentModals";
 import { ChipRow, FilterSelect, ScopeChip } from "../components/Filters";
 import {
-  DISCIPLINE_CODES, DOC_STATUSES, DOC_STATUS_LABEL, DOC_TYPES, DOC_TYPE_LABEL, cmp, docKpis, docPlace, latestRev, matchesDoc, pick, useQuery, useSearchText,
+  DISCIPLINE_CODES, DOC_STATUSES, DOC_STATUS_LABEL, DOC_TYPES, DOC_TYPE_LABEL, cmp, docKpis, docPlace, latestRev, linkClass, matchesDoc, pick, useQuery, useSearchText,
   useTowerFilter, words, type DocFilters,
 } from "../lib";
 
@@ -125,7 +125,7 @@ export default function Register() {
           <StatTile
             label="Permits due" value={fmtNumber(kpi.permitsDue)} tone={kpi.permitsExpired > 0 ? "hot" : "default"}
             delta={
-              <Link to={paths.permits({ tower: tower || undefined })} className="focus-ring rounded hover:underline">
+              <Link to={paths.permits({ tower: tower || undefined })} className={linkClass}>
                 {kpi.permitsExpired > 0 ? `${fmtNumber(kpi.permitsExpired)} expired · ` : ""}Open permits
               </Link>
             }

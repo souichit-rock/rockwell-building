@@ -46,7 +46,7 @@ Consume as `rgb(var(--c-x))` or `rgb(var(--c-x) / .25)`. Never as a bare value.
   /* ink */
   --c-text: 19 42 78;             /* navy ink */
   --c-text-soft: 71 90 122;
-  --c-muted: 105 122 153;
+  --c-muted: 88 104 134;          /* AA (>= 4.5:1) for small text on white, paper and surface-2 */
 
   /* lines */
   --c-border: 221 229 240;
@@ -187,8 +187,8 @@ Consume as `rgb(var(--c-x))` or `rgb(var(--c-x) / .25)`. Never as a bare value.
 @utility type-small   { font-size: 13px; line-height: 1.5;  font-weight: 500; }
 @utility type-eyebrow { font-size: 11px; line-height: 1.2;  font-weight: 800; text-transform: uppercase; letter-spacing: 0.18em; color: rgb(var(--c-muted)); }
 
-/* shared focus ring — put on every button, link, chip, nav item */
-@utility focus-ring { &:focus-visible { outline: none; box-shadow: 0 0 0 3px rgb(var(--c-accent) / .35); } }
+/* shared focus ring — put on every button, link, nav item. Two-tone (surface gap + ink line), >= 12:1 on every surface. Tab and Chip use an inset ink ring instead: their scrolling rows clip an outer shadow. */
+@utility focus-ring { &:focus-visible { outline: none; box-shadow: 0 0 0 2px rgb(var(--c-surface)), 0 0 0 4px rgb(var(--c-text)); } }
 
 /* the ONLY permitted gradient */
 @utility bg-hero { background-image: linear-gradient(135deg, rgb(var(--c-nav-bg)), rgb(var(--c-nav-bg-deep))); }
@@ -433,30 +433,30 @@ Domain → tone (every feature uses this map; it lives in `src/lib/status.ts`, o
 ```tsx
 <label className="relative block">
   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
-  <input type="search" className="h-10 w-full rounded-ctl border-[1.5px] border-line-strong bg-surface pl-9 pr-3 text-[14px] text-ink outline-none transition-colors placeholder:text-muted focus:border-gold focus:ring-3 focus:ring-gold/25" />
+  <input type="search" className="h-10 w-full rounded-ctl border-[1.5px] border-line-strong bg-surface pl-9 pr-3 text-[16px] text-ink outline-none transition-colors placeholder:text-muted focus:border-ink focus:ring-3 focus:ring-gold/40 sm:text-[14px]" />
 </label>
 ```
-Same input recipe (without the icon, `px-3`) is `Field`'s `<input>`, `<select>` (append `pr-9` + absolute `ChevronDown size-4 text-muted right-3`) and `<textarea min-h-[110px] py-3 resize-y>`.
+Text is 16px below `sm` (iOS Safari zooms into anything smaller) and 14px from `sm` up. Same input recipe (without the icon, `px-3`) is `Field`'s `<input>`, `<select>` (append `pr-9` + absolute `ChevronDown size-4 text-muted right-3`) and `<textarea min-h-[110px] py-3 resize-y>`.
 `Field` (`label: string`, `hint?: string`, `error?: string`, `htmlFor?`, `children` = the control): `<label className="mb-1.5 block text-[11px] font-extrabold uppercase tracking-[.12em] text-muted">` → control →
-`<p className="mt-1.5 text-xs font-medium text-muted">hint</p>` / error `text-danger`. Fields stack with `space-y-4`. The input / select / textarea class strings are exported as `inputClass`, `selectClass`, `textareaClass` from `Field.tsx` so forms use them on native elements.
+`<p className="mt-1.5 text-xs font-medium text-muted">hint</p>` / error `text-danger` with `role="alert"`; when an error appears the first invalid Field in its form or dialog takes focus (opt out with `autoFocusOnError={false}`). Fields stack with `space-y-4`. The input / select / textarea class strings are exported as `inputClass`, `selectClass`, `textareaClass` from `Field.tsx` so forms use them on native elements.
 
 ### 4.8 Filter chips (`Chip`) — `label: string, active: boolean, count?: number, onClick`
 
 ```tsx
-<button className={cn("focus-ring inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border-[1.5px] px-3.5 text-xs font-bold transition-colors duration-150",
+<button className={cn("inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border-[1.5px] px-3.5 text-xs font-bold outline-none transition-colors duration-150 focus-visible:[box-shadow:inset_0_0_0_2px_rgb(var(--c-text))]",
   active ? "border-gold bg-gold text-on-gold" : "border-line bg-surface-2 text-ink-soft hover:border-line-strong")}>
-  {label}{count != null && <span className="opacity-70 tabular-nums">{count}</span>}
+  {label}{count != null && <span className="tabular-nums">{count}</span>}
 </button>
 ```
-Row: `flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]` (scrolls sideways on phone, never wraps into three lines).
+Row: `flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]` (scrolls sideways on phone, never wraps into three lines). An active chip scrolls itself into view in its row. The focus ring is inset because the row clips an outer shadow.
 
 ### 4.9 Tabs (`Tabs`) — two modes, one component:
 `type TabItem = { label: string; count?: number } & ({ to: string; end?: boolean } | { key: string })`;
-props `items: TabItem[]` plus, for key mode, `value: string` and `onChange: (key: string) => void`. Items with `to` render `NavLink` (route tabs: Standards / Finishes / Compliance, Register / Permits, Schedule / Inspections); items with `key` render `<button role="tab" aria-selected>` (local tabs: passport `?tab=`, warranty `?band=`, document "Where used"). Never mix modes in one `items` array.
+props `items: TabItem[]` plus, for key mode, `value: string` and `onChange: (key: string) => void`. Items with `to` render `NavLink` inside a `role="navigation"` landmark, the active link carrying `aria-current="page"` (route tabs: Standards / Finishes / Compliance, Register / Permits, Schedule / Inspections); items with `key` render `<button role="tab" aria-selected>` (local tabs: passport `?tab=`, warranty `?band=`, document "Where used"). Never mix modes in one `items` array.
 
 ```tsx
-<nav role="tablist" className="mt-5 flex gap-1 overflow-x-auto border-b border-line">
-  <NavLink className={({isActive}) => cn("focus-ring -mb-px flex h-10 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 text-xs font-extrabold uppercase tracking-[.08em] transition-colors",
+<nav aria-label="Sections" className="mt-5 flex gap-1 overflow-x-auto border-b border-line">
+  <NavLink className={({isActive}) => cn("-mb-px flex h-10 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 text-xs font-extrabold uppercase tracking-[.08em] outline-none transition-colors focus-visible:[box-shadow:inset_0_0_0_2px_rgb(var(--c-text))]",
     isActive ? "border-gold text-ink" : "border-transparent text-muted hover:text-ink-soft")}>
     Documents <span className="rounded-full bg-surface-2 px-1.5 text-[10px] tabular-nums text-ink-soft">12</span>
   </NavLink>

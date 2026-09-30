@@ -145,7 +145,8 @@ export interface WoFilters {
 const pick = <T extends string>(v: string | null, all: readonly T[]): T | "" => (all.find((x) => x === v) ?? "");
 
 /**
- * Filters live in the route query. The tower comes from `?tower=` when present (query wins) and from the tower scope otherwise.
+ * Filters live in the route query. The tower comes from `?tower=` when present (query wins) and from the tower scope otherwise,
+ * except that a named `?assetId=` or `?vendor=` is never narrowed by the scope.
  * `update` writes query keys (an empty value removes the key); `setTower("")` also drops the scope so "All towers" means all.
  */
 export function useWoFilters() {
@@ -153,16 +154,22 @@ export function useWoFilters() {
   const [sp, setSp] = useSearchParams();
   const { towerId: scope, setTowerId } = useTowerScope();
   const queryTower = lookup(db.towers, sp.get("tower"))?.id ?? "";
+  const assetId = sp.get("assetId") ?? "";
+  const vendor = lookup(db.vendors, sp.get("vendor"))?.id ?? "";
+  // A link that names an asset or a vendor (passport, warranty register, vendor page) already says which work orders it means, and
+  // those pages ignore the rail scope; applying it here would show fewer rows than the page that linked (or none at all).
+  const named = Boolean(assetId || vendor);
+  const activeScope = named ? "" : (scope ?? "");
 
   const filters: WoFilters = {
     view: sp.get("view") === "list" ? "list" : "board",
-    tower: queryTower || scope || "",
+    tower: queryTower || activeScope,
     status: pick(sp.get("status"), STATUSES),
     priority: pick(sp.get("priority"), PRIORITIES),
     kind: pick(sp.get("kind"), KINDS),
     assignee: lookup(db.teamMembers, sp.get("assignee"))?.id ?? "",
-    vendor: lookup(db.vendors, sp.get("vendor"))?.id ?? "",
-    assetId: sp.get("assetId") ?? "",
+    vendor,
+    assetId,
     cancelled: sp.get("cancelled") === "1",
   };
 
@@ -191,8 +198,8 @@ export function useWoFilters() {
     setTower,
     clear,
     hasFilters: Boolean(queryTower || filters.status || filters.priority || filters.kind || filters.assignee || filters.vendor || filters.assetId || filters.cancelled),
-    /** Tower id shown in the "Scoped to" chip: the scope, but only while no ?tower= overrides it. */
-    scopeTower: scope && !queryTower ? scope : "",
+    /** Tower id shown in the "Scoped to" chip: the scope, but only while it is actually applied (no ?tower=, no named asset or vendor). */
+    scopeTower: queryTower ? "" : activeScope,
     clearScope: () => setTowerId(null),
   };
 }

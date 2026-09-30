@@ -1,4 +1,4 @@
-import { CalendarX } from "lucide-react";
+import { CalendarX, ClipboardList } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
@@ -55,7 +55,7 @@ export function MaintenanceTab({ p }: { p: Passport }) {
                   </dl>
                   {pl.checklist.length > 0 && (
                     <details className="mt-3 text-[13px]">
-                      <summary className="focus-ring inline-block cursor-pointer rounded py-1 font-bold text-ink-soft">Checklist ({pl.checklist.length})</summary>
+                      <summary className="focus-ring relative inline-block cursor-pointer rounded py-1 font-bold text-ink-soft after:absolute after:-inset-2 after:content-['']">Checklist ({pl.checklist.length})</summary>
                       <ol className="mt-2 list-decimal space-y-1 pl-5 text-ink-soft">
                         {pl.checklist.map((item) => <li key={item}>{item}</li>)}
                       </ol>
@@ -70,7 +70,7 @@ export function MaintenanceTab({ p }: { p: Passport }) {
 
       <Card title="Open work orders" actions={<Button to={paths.newWorkOrder({ assetId: asset.id })} variant="ghost" size="sm">Raise work order</Button>}>
         {openWos.length === 0 ? (
-          <p className="type-small text-muted">No open work orders for this asset.</p>
+          <EmptyState icon={ClipboardList} title="No open work orders" body="Nothing is open against this asset." className="py-8" />
         ) : (
           <ul className="divide-y divide-line">
             {openWos.map((wo) => (
@@ -85,7 +85,7 @@ export function MaintenanceTab({ p }: { p: Passport }) {
           </ul>
         )}
         <p className="type-small mt-4">
-          <Link to={paths.workOrders({ assetId: asset.id })} className={LINK}>All work orders for {asset.tag}</Link>
+          <Link to={paths.workOrders({ assetId: asset.id, tower: asset.towerId })} className={LINK}>All work orders for {asset.tag}</Link>
         </p>
       </Card>
     </div>

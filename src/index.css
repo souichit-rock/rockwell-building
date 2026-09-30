@@ -69,8 +69,10 @@
 @utility type-small   { font-size: 13px; line-height: 1.5;  font-weight: 500; }
 @utility type-eyebrow { font-size: 11px; line-height: 1.2;  font-weight: 800; text-transform: uppercase; letter-spacing: 0.18em; color: rgb(var(--c-muted)); }
 
-/* shared focus ring — put on every button, link, chip, nav item */
-@utility focus-ring { &:focus-visible { outline: none; box-shadow: 0 0 0 3px rgb(var(--c-accent) / .35); } }
+/* shared focus ring — put on every button, link, chip, nav item. Two-tone (surface gap + ink line): 12.7:1 or better on paper, white,
+   surface-2 and the navy rail (the gap shows on navy, the ink line everywhere else), light and dark. Tab and Chip use an inset ring
+   instead, because their scrolling rows clip an outer shadow. */
+@utility focus-ring { &:focus-visible { outline: none; box-shadow: 0 0 0 2px rgb(var(--c-surface)), 0 0 0 4px rgb(var(--c-text)); } }
 
 /* the ONLY permitted gradient */
 @utility bg-hero { background-image: linear-gradient(135deg, rgb(var(--c-nav-bg)), rgb(var(--c-nav-bg-deep))); }

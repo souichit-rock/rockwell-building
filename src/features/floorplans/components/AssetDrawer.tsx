@@ -7,7 +7,7 @@ import { useDb } from "@/data/store";
 import { fmtDate } from "@/lib/dates";
 import { paths } from "@/lib/paths";
 import { assetStatusTone, conditionTone, dueTone, warrantyTone } from "@/lib/status";
-import { WARRANTY_LABEL, assetBrief, latestRev, words } from "../lib";
+import { assetBrief, latestRev, words } from "../lib";
 
 // the ::after grows the hit area to a 40px-tall target without moving the text
 const LINK = "focus-ring relative rounded text-ink underline-offset-2 hover:underline after:absolute after:-inset-x-1 after:-inset-y-2.5 after:content-['']";
@@ -71,8 +71,8 @@ export function AssetDrawer({ asset, onClose }: { asset: Asset | undefined; onCl
                 k: "Warranty",
                 v: (
                   <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <Badge tone={warrantyTone(b.band)}>{WARRANTY_LABEL[b.band]}</Badge>
-                    {b.warranty && <span className="text-[13px] font-medium text-ink-soft">to {fmtDate(b.warranty.end)}</span>}
+                    <Badge tone={warrantyTone(b.band)}>{words(b.band)}</Badge>
+                    {b.warranty && <span className="text-[13px] font-medium text-ink-soft">Ends {fmtDate(b.warranty.end)}</span>}
                   </span>
                 ),
               },
@@ -86,7 +86,7 @@ export function AssetDrawer({ asset, onClose }: { asset: Asset | undefined; onCl
                     {b.sheet.stale && <Badge tone="warn">Superseded sheet</Badge>}
                   </span>
                 ) : (
-                  <span className="font-medium text-muted">No as-built on record</span>
+                  <Badge tone="warn">No as-built</Badge>
                 ),
               },
               {

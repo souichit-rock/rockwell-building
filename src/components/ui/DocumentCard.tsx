@@ -31,7 +31,8 @@ export function DocumentCard({ doc, href }: { doc: DocRow; href?: string }) {
   // newest revision by date; on a tie the later array entry wins, so it works whichever way the seed orders them
   const latest = doc.revisions.reduce<DocRow["revisions"][number] | undefined>((a, r) => (!a || r.date >= a.date ? r : a), undefined);
   const ext = (doc.fileName.split(".").pop() ?? "").toUpperCase();
-  const meta = [ext, fileSize(doc.fileSizeKb), latest && `Rev ${latest.rev} ${fmtDate(latest.date)}`, doc.disciplineId].filter(Boolean).join(" · ");
+  // documents added through "Add document" carry no file, so fileSizeKb is 0: leave the size out rather than print "0 KB"
+  const meta = [ext, doc.fileSizeKb > 0 && fileSize(doc.fileSizeKb), latest && `Rev ${latest.rev} ${fmtDate(latest.date)}`, doc.disciplineId].filter(Boolean).join(" · ");
 
   return (
     <article className="flex min-w-0 gap-3 rounded-card border border-line bg-surface p-4 transition-colors duration-150 hover:border-line-strong">

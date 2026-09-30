@@ -43,6 +43,8 @@ export interface AssetRow {
   sheet: { doc: Document; stale: boolean } | null;
   compliance: Compliance;
   haystack: string;
+  /** True when an O&M manual is linked (record gap: critical assets without one). */
+  hasOm: boolean;
 }
 
 /** One row per asset, sorted by tag. Pure over the snapshot, so callers memoise on `db`. */
@@ -70,6 +72,7 @@ export function buildRows(db: Db): AssetRow[] {
       sheet: governingSheet(db, asset.id),
       compliance: complianceFor(db, asset),
       haystack: [asset.tag, asset.serial, model?.modelNo, space.name, space.code, type.name, brand?.name].filter(Boolean).join(" ").toLowerCase(),
+      hasOm: docsFor(db, "asset", asset.id).some((d) => d.type === "om-manual"),
     });
   }
   return rows.sort((a, b) => (a.asset.tag < b.asset.tag ? -1 : a.asset.tag > b.asset.tag ? 1 : 0));
@@ -77,7 +80,7 @@ export function buildRows(db: Db): AssetRow[] {
 
 // --- Registry filters (all of them live in the route query) ---------------------------------------------------------------------
 
-export const FILTER_KEYS = ["q", "tower", "discipline", "type", "status", "band", "crit", "compliance", "pm", "brand", "model", "vendor"] as const;
+export const FILTER_KEYS = ["q", "tower", "discipline", "type", "status", "band", "crit", "compliance", "pm", "brand", "model", "vendor", "om"] as const;
 
 export const STATUSES: AssetStatus[] = ["in-service", "standby", "under-repair", "decommissioned"];
 export const CONDITIONS: Condition[] = ["good", "fair", "poor", "unknown"];
@@ -85,9 +88,10 @@ export const COMPLIANCE_STATUSES: ComplianceStatus[] = ["compliant", "phase-out"
 export const CRITICALITIES: Criticality[] = ["A", "B", "C"];
 const BANDS: WarrantyBand[] = ["expired", "30d", "90d", "365d", "active", "none"];
 
-/** Select options; the combined `30d,90d` entry is the one the "Warranty <= 90 d" quick chip writes. */
+/** Select options; the combined `30d,90d` entry is the one the "Warranty <= 90 d" quick chip writes, `365d,active` the catalogue's "Active" bucket link. */
 export const BAND_OPTIONS: { value: string; label: string }[] = [
   { value: "30d,90d", label: "Expiring within 90 days" },
+  { value: "365d,active", label: "More than 90 days" },
   { value: "expired", label: "Expired" },
   { value: "30d", label: "Within 30 days" },
   { value: "90d", label: "31 to 90 days" },
@@ -109,7 +113,12 @@ export interface Filters {
   brand: Id | null;
   model: Id | null;
   vendor: Id | null;
+  /** `om=missing`: only assets with no O&M manual linked (dashboard record-gap link). */
+  om: boolean;
 }
+
+/** Own-key lookup for the plain-object collections, so a query or route id like "constructor" is unknown instead of an inherited member. */
+export const own = <T>(rec: Record<string, T>, id: string): T | undefined => (Object.hasOwn(rec, id) ? rec[id] : undefined);
 
 const isOneOf = <T extends string>(list: readonly T[], v: string | null): v is T => v !== null && (list as readonly string[]).includes(v);
 
@@ -124,9 +133,9 @@ export function readFilters(sp: URLSearchParams, db: Db, scopeTower: Id | null):
   const compliance = one("compliance");
   return {
     q: sp.get("q") ?? "",
-    tower: tower && tower in db.towers ? tower : scopeTower,
-    discipline: discipline && discipline in db.disciplines ? (discipline as DisciplineCode) : null,
-    type: type && type in db.equipmentTypes ? type : null,
+    tower: tower && own(db.towers, tower) ? tower : scopeTower,
+    discipline: discipline && own(db.disciplines, discipline) ? (discipline as DisciplineCode) : null,
+    type: type && own(db.equipmentTypes, type) ? type : null,
     status: isOneOf(STATUSES, status) ? status : null,
     bands: (sp.get("band") ?? "").split(",").filter((b): b is WarrantyBand => isOneOf(BANDS, b)),
     crit: isOneOf(CRITICALITIES, crit) ? crit : null,
@@ -135,6 +144,7 @@ export function readFilters(sp: URLSearchParams, db: Db, scopeTower: Id | null):
     brand: one("brand"),
     model: one("model"),
     vendor: one("vendor"),
+    om: sp.get("om") === "missing",
   };
 }
 
@@ -154,6 +164,7 @@ export function matches(r: AssetRow, f: Filters, skip?: keyof Filters): boolean 
     (!on("brand") || !f.brand || r.brand?.id === f.brand) &&
     (!on("model") || !f.model || a.modelId === f.model) &&
     (!on("vendor") || !f.vendor || [a.installerVendorId, a.serviceVendorId, r.warranty?.vendorId].includes(f.vendor)) &&
+    (!on("om") || !f.om || !r.hasOm) &&
     (!on("q") || f.q.toLowerCase().split(/\s+/).filter(Boolean).every((t) => r.haystack.includes(t)))
   );
 }

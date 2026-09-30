@@ -52,7 +52,7 @@ export function FactsCard({ tower, floors, assetCount, manager, contacts }: {
           { k: "Levels", v: `${levelRange(floors)} · ${fmtNumber(tower.floorsAbove)} above, ${fmtNumber(tower.floorsBelow)} below` },
           { k: "GFA", v: fmtSqm(tower.gfaSqm) },
           { k: "Turnover", v: String(tower.turnoverYear) },
-          { k: "Assets", v: <Link to={paths.assets({ tower: tower.id })} className="focus-ring rounded hover:underline">{fmtNumber(assetCount)}</Link> },
+          { k: "Assets", v: <Link to={paths.assets({ tower: tower.id })} className="focus-ring relative rounded hover:underline after:absolute after:-inset-x-2 after:-inset-y-3 after:content-['']">{fmtNumber(assetCount)}</Link> },
         ]}
       />
       {manager && (

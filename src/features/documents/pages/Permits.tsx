@@ -14,7 +14,7 @@ import { DocsHeader } from "../components/DocsHeader";
 import { ChipRow, FilterSelect, ScopeChip } from "../components/Filters";
 import { RenewPermitModal } from "../components/RenewPermitModal";
 import {
-  PERMIT_LABEL, PERMIT_STATE_LABEL, PERMIT_TYPES, cmp, expiryNote, hasExpiry, permitState, pick, renewalPlans, useQuery, useTowerFilter, words,
+  PERMIT_LABEL, PERMIT_STATE_LABEL, PERMIT_TYPES, cmp, expiryNote, hasExpiry, linkClass, permitState, pick, renewalPlans, useQuery, useTowerFilter, words,
 } from "../lib";
 
 interface Row {
@@ -102,23 +102,32 @@ export default function Permits() {
     {
       key: "plan", label: "Renewal PM plan",
       render: (r) => {
-        const first = r.plans[0];
+        const [first, ...rest] = r.plans;
         if (!first) return NONE;
-        const more = r.plans.length - 1;
         return (
           <div className="min-w-48">
             <Link to={paths.plan(first.id)} className={LINK}>
               <span className="font-mono text-[12px]">{r.planTag}</span> · {first.task}
             </Link>
-            <p className="text-xs text-muted">
-              Next due {fmtDate(first.nextDue)}
-              {more > 0 && (
-                <>
-                  {" · "}
-                  <Link to={paths.maintenance({ tower: r.permit.towerId, regulatory: 1 })} className={LINK}>{`+${plural(more, "more plan")}`}</Link>
-                </>
-              )}
-            </p>
+            <p className="text-xs text-muted">Next due {fmtDate(first.nextDue)}</p>
+            {rest.length > 0 && (
+              // this permit's other plans, each linked; the maintenance list cannot be filtered to one permit
+              <details className="mt-1 text-xs">
+                <summary className={`${linkClass} relative inline-block cursor-pointer after:absolute after:-inset-x-2 after:-inset-y-2 after:content-['']`}>
+                  {`+${plural(rest.length, "more plan")}`}
+                </summary>
+                <ul className="mt-3 space-y-2">
+                  {rest.map((p) => (
+                    <li key={p.id}>
+                      <Link to={paths.plan(p.id)} className={LINK}>
+                        <span className="font-mono text-[12px]">{db.assets[p.assetId]?.tag ?? p.assetId}</span> · {p.task}
+                      </Link>
+                      <p className="text-muted">Next due {fmtDate(p.nextDue)}</p>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
           </div>
         );
       },

@@ -1,6 +1,6 @@
 import { assetsIn, governingSheet, openWorkOrders, warrantyBand, warrantyFor } from "@/data/selectors";
 import type {
-  Asset, Db, DisciplineCode, DocRevision, DocStatus, Document, FloorKind, Id, PlanPin, PMPlan, Rect, Space, SpaceKind, Tone, WarrantyBand,
+  Asset, Db, DisciplineCode, DocRevision, DocStatus, Document, FloorKind, Id, PlanPin, PMPlan, Rect, Space, SpaceKind, Tone,
   WorkOrder, WOPriority,
 } from "@/data/types";
 import { plural } from "@/lib/format";
@@ -101,15 +101,6 @@ export const kindLabel = (kind: SpaceKind): string => KIND_ACRONYM[kind] ?? `${k
 
 export const FLOOR_KIND_LABEL: Record<FloorKind, string> = {
   "basement-plant": "Basement plant", "basement-parking": "Basement parking", ground: "Ground floor", podium: "Podium", typical: "Typical floor", roof: "Roof",
-};
-
-export const WARRANTY_LABEL: Record<WarrantyBand, string> = {
-  expired: "Expired", "30d": "Ends within 30 days", "90d": "Ends within 90 days", "365d": "Ends within a year", active: "Active", none: "No warranty",
-};
-
-/** The same bands in badge-sized words for table cells, where "Ends within 90 days" would push the column off the card. */
-export const WARRANTY_SHORT: Record<WarrantyBand, string> = {
-  expired: "Expired", "30d": "Under 30 days", "90d": "Under 90 days", "365d": "Under a year", active: "Active", none: "None",
 };
 
 export const words = (s: string): string => s.replace(/-/g, " ");
