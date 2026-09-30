@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => ({
       // Naming it keeps the gate's entry-chunk budget (dist/assets/index-*.js) measuring the entry alone.
       output: {
         chunkFileNames: (chunk) => (chunk.facadeModuleId?.includes("/src/data/seed/") ? "assets/seed-[hash].js" : "assets/[name]-[hash].js"),
+        // Shared primitives, helpers and icons in one chunk: without this every lazy page pulled ~25 tiny
+        // chunks (Button, Card, KV, each icon…) in a waterfall on a cold deep link (measured 2.4 s on Vercel).
+        manualChunks: (id) => (/[\/]src[\/](components|lib)[\/]/.test(id) || id.includes("lucide-react") ? "ui" : undefined),
       },
     },
   },
