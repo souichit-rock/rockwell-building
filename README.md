@@ -14,6 +14,7 @@ npm run dev           # http://localhost:5173
 npm run preview       # serve the production build
 npm run gate          # everything below in one command
 node scripts/gate.mjs --static   # only the source rules, no builds (about a second)
+node scripts/smoke.mjs http://localhost:4173   # headless route sweep (needs Chrome + global puppeteer-core)
 ```
 
 Node 20 or newer. The only runtime dependencies are React 19, react-router 7 and lucide-react; styling is Tailwind CSS v4 on the Rockwell token palette in `docs/design-system.md`.
